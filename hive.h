@@ -5,16 +5,19 @@
 #include <QColor>
 #include <QObject>
 
+
+class World;
+
 class Hive :  public QObject, public IObjects
 {
     Q_OBJECT
 //    Q_INTERFACES(QGraphicsItem)
 public:
-    Hive(float x, float _y);
+    Hive(float x, float y, World* worldPtr);
     virtual ~Hive() override;
     virtual float GetX() override;
     virtual float GetY() override;
-    virtual void SetCoordinates(float x, float _y) override;
+    virtual void SetCoordinates(float x, float y) override;
     QColor* GetColor();
     unsigned GetSize();
 private:
@@ -22,6 +25,7 @@ private:
     float _y;
     unsigned _size = 40;
     QColor* _color = nullptr;
+    float _scaleX, _scaleY;
 
     void GenerateColorOfThis();
 public:
@@ -32,5 +36,6 @@ public:
 public:
     void Work();
 
+};
 
 #endif // HIVE_H

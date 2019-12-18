@@ -3,9 +3,9 @@
 #include <QThread>
 
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget *parent, unsigned width, unsigned height)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    , ui(new Ui::MainWindow), _widgetWidth(width), _widgetHeigth(height)
 {
     ui->setupUi(this);
     _scene = new QGraphicsScene;
@@ -44,7 +44,7 @@ void MainWindow::GetWorldRef(World *worldPtr)
 
 void MainWindow::RepaintScene(QGraphicsItem * item)
 {
-//    _scene->addRect(0,0,10,10, QPen(Qt::gray));
+//    _scene->addEllipse(rand()%1000,rand()%500,10,10, QPen(Qt::gray));
 
     if(item != nullptr) {
         if(item->scene() == _scene)
@@ -52,6 +52,7 @@ void MainWindow::RepaintScene(QGraphicsItem * item)
         _scene->addItem(item);
     }
     _scene->update();
+    QApplication::processEvents();
 }
 
 void MainWindow::StartAlgorithm()
@@ -70,10 +71,9 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     qDebug() << "---\nvuew: " << ui->graphicsView->rect();
     qDebug() << "widgeeet: " << ui->centralwidget->rect();
     qDebug() << "seceneee: " << _scene->sceneRect();
-    _scene->setSceneRect(0,0,1000,600);
+    _scene->setSceneRect(0,0,_widgetWidth, _widgetHeigth);
     if(_rect == nullptr){
         _rect = new QGraphicsRectItem(_scene->sceneRect());
-
     }
     _scene->update();
 //    QApplication::processEvents(/*QEventLoop::ProcessEventsFlag::WaitForMoreEvents*/);

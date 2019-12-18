@@ -4,17 +4,20 @@
 #include "world.h"
 
 
-World* BigBang(){
-    World *world = new World();
-    return  world;
-}
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
+
+    unsigned widgetWidth = 1000;
+    unsigned widgetHeight = 600;
+
+    unsigned worldWidth = 20;
+    unsigned worldHeight = 10;
+
+    MainWindow w(nullptr,widgetWidth,widgetHeight);
     World* world = nullptr;
-    world = new World();
+    world = new World(widgetWidth, widgetHeight, worldWidth, worldHeight);
     w.GetWorldRef(world);
     world->Run();
 //    w.StartAlgorithm();

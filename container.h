@@ -6,29 +6,43 @@
 #include <QGraphicsItem>
 #include <QObject>
 #include "hive.h"
+#include <QList>
+#include "bee.h"
+#include "flower.h"
+
+
+class World;
 
 class Container : public QObject{
     Q_OBJECT
 
 private:
-    QMap<int, IObjects*> _objArr;
+    QList<IObjects*> _objArr;
    /* AbstractFlower* flowerPtr = nullptr;
     Hive* hivePtr = nullptr;
     BeeSimulator* beePtr = nullptr;*/
     int _count = 0;
-
+    std::mt19937 _gen;
 signals:
     void RepaintObj(QGraphicsItem* item);
-    void ObjectWantToMove(float dx,float dy, IObjects* objPtr);
-
+    void ObjectWantToMove(float dx,float dy, IObjects* objPtr, Container* contPtr);
+    void BeeCollect(Bee* bee, Container* thisCont);
+private slots:
+    void BeeWanToCollect(Bee* bee);
+    void WantToMove(float dx,float dy, IObjects* objPtr);
 public:
     Container(unsigned x, unsigned y);
     virtual ~Container() = default;
-
+    unsigned GetX();
+    unsigned GetY();
     void RedrawObject();
     void Recalc();
     unsigned _x;
     unsigned _y;
+    QSet<Flower *> GetFlowers();
+    bool CheckFromHive();
+    QString coordStr;
+
 
 /*
     bool ContainsFlower() {return (flowerPtr) ? true : false; }
@@ -60,9 +74,11 @@ public:
         }
     }*/
 
-    void AddFlower();
-    void AddBee(Hive* parrent);
-    Hive* AddHive();
+    void AddFlower(World* worldPtr);
+    void AddObject(IObjects* obj);
+    bool RemoveObject(IObjects *obj);
+    void AddBee(Hive* parrent, World* worldPtr);
+    Hive* AddHive(World* worldPtr);
 /*    void AddHive() {
         _objArr.insert(++_count,new Hive);
     }

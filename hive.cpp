@@ -1,9 +1,12 @@
 #include "hive.h"
 #include <QPainter>
 #include <random>
+#include "world.h"
 
-Hive::Hive(float x, float y) : _x(x), _y(y) {
+Hive::Hive(float x, float y, World* worldPtr) : _x(x+0.5f), _y(y+0.5f) {
     GenerateColorOfThis();
+    _scaleY = worldPtr->_scaleY;
+    _scaleX = worldPtr->_scaleX;
 }
 
 Hive::~Hive() {
@@ -13,6 +16,12 @@ Hive::~Hive() {
 float Hive::GetX() { return _x;}
 
 float Hive::GetY() { return _y; }
+
+void Hive::SetCoordinates(float x, float y)
+{
+    Q_UNUSED(x)
+    Q_UNUSED(y)
+}
 
 QColor *Hive::GetColor(){ return _color; }
 
@@ -45,13 +54,16 @@ void Hive::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 {
     painter->setPen(Qt::black);
     painter->setBrush(*_color);
-    painter->drawRect(static_cast<int>(_x-_size/2), static_cast<int>(_y-_size/2),
+    painter->drawRect(static_cast<int>(_x*_scaleX-_size/2/* + _scaleX/2*/), static_cast<int>(_y*_scaleY-_size/2/*+_scaleY/2*/),
                       static_cast<int>(_size),static_cast<int>(_size));
+//    painter->drawText(_x+_size,_y,QString::number(_x)+"x"+QString::number(_y));
+
     Q_UNUSED(option)
     Q_UNUSED(widget)
 }
 
 void Hive::Work()
 {
+//     QDebug(QtMsgType::QtInfoMsg) << "INFO: Hive work";
 
 }

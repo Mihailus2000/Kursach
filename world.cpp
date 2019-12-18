@@ -1,14 +1,28 @@
 #include "world.h"
-#include <random>
+#include <QTime>
 #include <QTimer>
+#include <QThread>
+#include <QApplication>
+#include <QDebug>
+#include <QList>
 //--------------------------------------------------------------------
 
-World::World()
+
+QList<QString> contToRemove;
+
+World::World(unsigned widgetWidth, unsigned widgetHeight, unsigned worldWidth, unsigned worldHeight)
 {
-    _width = 1000;
-    _height = 600;
+    contAmount = 0;
+    _width = worldWidth;
+    _height = worldHeight;
+
+    _scaleX = widgetWidth / worldWidth;
+    _scaleY = widgetHeight / worldHeight;
 
     _map = new TMap;
+    std::random_device device;
+//   std::time(QTimer);
+    _gen.seed(QTime::currentTime().msecsSinceStartOfDay());
 //    connect(_map, &TMap::value, this, &World::RepaintObj);
 }
 
@@ -17,26 +31,46 @@ void World::Run()
     if(_map->size() == 0){
         AddLife();
     }
-    QTimer *timer = new QTimer();
+    qDebug() << "\n--------------------------------------\n";
 
+//    QThread *th1 = new QThread();
+//    QThread *th2 = new QThread();
 
-    connect(timer, &QTimer::timeout, this, &World::Redraw);
+//    QTimer timer1,timer2;
 
-    timer->start(40);
+//    timer2.moveToThread(th2);
+//    timer1.moveToThread(th1);
+
+//    connect(&timer1, &QTimer::timeout, this, &World::Redraw);
+//    connect(&timer2, &QTimer::timeout, this, &World::Recalc);
+
+//    timer1.start(20);
+//    timer2.start(20);
+
+//    th1->start();
+//    th2->start();
+    QTime time, time1;
+    time1 = time = QTime::currentTime();
+
+    auto dT = std::abs(time.msecsTo(QTime::currentTime())); //250 - 220 = 30
+    auto dT1 = std::abs(time1.msecsTo(QTime::currentTime())); //250 - 220 = 30
 
 //    timer(Redraw(),40);
 //    t = curTime(); // 100
-//    while(true){
-//        dt = curTume()-t; //250 - 220 = 30
-//        if(dt >40){
-//            Redraw();
-//            t = curTime(); //220
-//        }
+    while(true){
+        dT = std::abs(time.msecsTo(QTime::currentTime())); //250 - 220 = 30
+        dT1 = std::abs(time1.msecsTo(QTime::currentTime())); //250 - 220 = 30
 
-//        if(dt>30){
+        if(dT > 20){
+            Redraw();
+            time = QTime::currentTime(); //220
+        }
 
-//        }
-//   }
+        if(dT1 > 10){
+            Recalc();
+            time1 = QTime::currentTime(); //220
+        }
+   }
 
 
 }
@@ -48,48 +82,56 @@ void World::Run()
 
 void World::AddLife()
 {
-        std::mt19937 gen(time(nullptr));
-        std::uniform_int_distribution<unsigned> X(0, _width);
-        std::uniform_int_distribution<unsigned> Y(0, _height);
 
-        for(int i = 0; i < 30; i++){
-            unsigned x = X(gen);
-            unsigned y = Y(gen);
+        std::uniform_int_distribution<unsigned> X(0, _width-1);
+        std::uniform_int_distribution<unsigned> Y(0, _height-1);
+
+        for(unsigned i = 0; i < _HIVE_AMOUNT; i++) {
+            unsigned x = X(_gen);
+            unsigned y = Y(_gen);
             QString xStr = "coordX"+QString::number(x)+"coordY"+QString::number(y);
             if(_map->find(xStr) == _map->end()){
                 auto cont = new Container(x,y);
                 connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
                 connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
+                connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
+
                 _map->insert(xStr, cont);
-                cont->AddFlower();
+                Hive* newHive = cont->AddHive(this);
+                for(unsigned j = 0; j < _BEE_AMOUNT; j++){
+                    cont->AddBee(newHive, this);
+                }
             }
             else{
-                auto cont = *_map->find(xStr);
-                cont->AddFlower();
+                    auto cont = *_map->find(xStr);
+                if(!cont->CheckFromHive()) {
+                    Hive* newHive = cont->AddHive(this);
+                    for(unsigned j = 0; j < _BEE_AMOUNT; j++){
+                        cont->AddBee(newHive, this);
+                    }
+                }
+            
             }
-
         }
 
-        for(int i = 0; i < 6; i++){
-            unsigned x = X(gen);
-            unsigned y = Y(gen);
+        for(unsigned i = 0; i < _FLOWERS_AMOUNT; i++){
+            unsigned x = X(_gen);
+            unsigned y = Y(_gen);
             QString xStr = "coordX"+QString::number(x)+"coordY"+QString::number(y);
             if(_map->find(xStr) == _map->end()){
                 auto cont = new Container(x,y);
                 connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
+                connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
+                connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
                 _map->insert(xStr, cont);
-                Hive* newHive = cont->AddHive();
-                for(int j = 0; j < 5; j++){
-                    cont->AddBee(newHive);
-                }
+                cont->AddFlower(this);
             }
             else{
                 auto cont = *_map->find(xStr);
-                Hive* newHive = cont->AddHive();
-                for(int j = 0; j < 5; j++){
-                    cont->AddBee(newHive);
-                }
+                if(!cont->CheckFromHive())
+                    cont->AddFlower(this);
             }
+
         }
 
 
@@ -98,20 +140,85 @@ void World::AddLife()
 
 void World::Redraw()
 {
-    for(auto obj : *_map){
-        obj->RedrawObject();
+    auto i = _map->begin();
+    while(i != _map->end()){
+//    for(auto obj : *_map){
+        (*i)->RedrawObject();
+        i++;
     }
 }
 
 void World::Recalc()
 {
-    for(auto obj : *_map){
-//        obj->();
+    auto i = _map->begin();
+    while(i != _map->end()){
+        (*i)->Recalc();
+        i++;
+    }
+//    auto delit = contToRemove.begin();
+//    while(delit != contToRemove.end()){
+//        auto delitIt = _map->find(*delit);
+//        _map->erase(delitIt);
+//        delit = contToRemove.erase(delit);
+//    }
+//    contToRemove.clear();
+
+}
+
+
+
+void World::MoveObject(float dx, float dy, IObjects *ptr, Container *contPtr)
+{
+    auto objY = ptr->GetY();
+    auto objX = ptr->GetX();
+
+
+
+    if(objX+dx > 0 && objY+dy > 0 && objX+dx < _scaleX*(_width-1) &&  objY+dy < _scaleY*(_height-1)) {
+
+        unsigned newX = static_cast<unsigned>(std::floor(static_cast<double>(objX+dx)));
+        unsigned newY = static_cast<unsigned>(std::floor(static_cast<double>(objY+dy)));
+
+        if(( newX < _width-1 && newX >= 0 )&&( newY < _height-1 && newY >= 0)) {
+            if(newX != contPtr->GetX() || newY != contPtr->GetY()) {
+                QString coordStr = "coordX"+QString::number(newX) +"coordY"+QString::number(newY);
+
+                if(_map->find(coordStr) == _map->end()){
+                    auto cont = new Container(newX,newY);
+                    connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
+                    connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
+                    connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
+                    _map->insert(coordStr, cont);
+                    if(contPtr->RemoveObject(ptr)){
+//                        contToRemove.push_back(contPtr->coordStr);
+//                        _map->remove(contPtr->coordStr);
+                    }
+                    cont->AddObject(ptr);
+                }
+                else{
+                    auto cont = *_map->find(coordStr);
+                    if(contPtr->RemoveObject(ptr)){
+//                        contToRemove.push_back(contPtr->coordStr);
+                    }
+                    cont->AddObject(ptr);
+                }
+            }
+            ptr->SetCoordinates(objX+dx,objY+dy);
+        }
     }
 }
 
-void World::MoveObject(float dx, float dy, IObjects *ptr)
+void World::BeeCollectFromFlower(Bee *bee, Container *itsCont)
 {
-
+    auto flowers = itsCont->GetFlowers();
+    if(flowers.size() != 0){
+        for(auto flower : flowers){
+            if(!bee->IfFull()){
+                bee->AddNectar(flower->GiveNectar());
+            }
+            else
+                break;
+        }
+    }
 }
 
