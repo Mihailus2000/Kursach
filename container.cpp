@@ -16,6 +16,11 @@ void Container::WantToMove(float dx, float dy, IObjects *objPtr)
     emit ObjectWantToMove(dx,dy,objPtr, this);
 }
 
+void Container::GenerateNewBee(Bee *bee)
+{
+    AddObject(bee);
+}
+
 Container::Container(unsigned x, unsigned y) : _x(x), _y(y) {
      coordStr = "coordX"+QString::number(x) +"coordY"+QString::number(y);
      _gen.seed(rand());
@@ -114,6 +119,7 @@ void Container::AddBee(Hive* parent, World *worldPtr)
     connect(newBee, &Bee::WantToMove, this, &Container::WantToMove);
     connect(newBee, &Bee::ToCollect, this, &Container::BeeWanToCollect);
     _objArr.append(newBee);
+    parent->AddBeeToMemory(newBee);
     ++_count;
 //    QDebug(QtMsgType::QtInfoMsg) << "INFO: Add bee   :  (" << _x+0.5f << "x" << _y+0.5f << ")";
 }
@@ -121,6 +127,7 @@ void Container::AddBee(Hive* parent, World *worldPtr)
 Hive *Container::AddHive(World *worldPtr)
 {
     Hive* newHive = new Hive(_x,_y, worldPtr);
+    connect(newHive, &Hive::WantGenerateNewBee, this, &Container::GenerateNewBee);
     _objArr.append(newHive);
     ++_count;
 //    QDebug(QtMsgType::QtInfoMsg) << "INFO: Add hive to contaner: (" << _x << "x" << _y << ")";

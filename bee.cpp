@@ -1,6 +1,6 @@
 #include "bee.h"
 #include <QPainter>
-#include <QDEbug>
+#include <QDebug>
 #include <QWidget>
 #include "world.h"
 
@@ -39,9 +39,14 @@ void Bee::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
 
 void Bee::Work()
 {
+    _beelife -= 0.5f;
     if(_beeState == FLY){
         Move();
 
+        if(_beelife <= _MAX_LIFE_LEVEL * 0.1f){
+            _beeState = FLY_BACK;
+            return;
+        }
         emit ToCollect(this);
         if(IfFull()){
             _beeState = FLY_BACK;
@@ -54,12 +59,16 @@ void Bee::Work()
         //NOTHING
     }if(_beeState == AT_HOME){
         // TODO
+        EatHonny();
     }
 
 }
 
-Bee::Bee(Hive* parent, World *worldPtr)
+Bee::Bee(Hive* parent, World* worldPtr, float capacityOfNectar, float takeFoodAtTime,float lifeLevel) :
+    _MAX_CAPACITY_OF_NECTAR (capacityOfNectar), _TAKE_FOOD_AT_TIME(takeFoodAtTime), _MAX_LIFE_LEVEL(lifeLevel)
 {
+    _beelife = _MAX_LIFE_LEVEL;
+
     _scaleY = worldPtr->_scaleY;
     _scaleX = worldPtr->_scaleX;
     _x = parent->GetX();
@@ -89,7 +98,7 @@ float Bee::GetY(){ return _y; }
 
 bool Bee::IfFull()
 {
-    if(_containsNectar >= _maxCapacityOfNectar)
+    if(_containsNectar >= _MAX_CAPACITY_OF_NECTAR)
         return true;
     else
         return false;
@@ -97,11 +106,16 @@ bool Bee::IfFull()
 
 void Bee::AddNectar(float nectar)
 {
-    if(_containsNectar+nectar >= _maxCapacityOfNectar){
-        _containsNectar = _maxCapacityOfNectar;
+    if(_containsNectar+nectar >= _MAX_CAPACITY_OF_NECTAR){
+        _containsNectar = _MAX_CAPACITY_OF_NECTAR;
     }
     else
         _containsNectar += nectar;
+}
+
+std::tuple<float, float, float> Bee::GetGeneticParametrs()
+{
+    return {_MAX_CAPACITY_OF_NECTAR, _TAKE_FOOD_AT_TIME,_MAX_LIFE_LEVEL};
 }
 
 void Bee::Move()
@@ -152,16 +166,26 @@ void Bee::MoveHome()
         }
         else{
             _beeState = AT_HOME;
+            _parent->AddNectar(_containsNectar);
+            _containsNectar = 0.f;
             return;
         }
      }
-     if(floor(_x) == floor(_parent->GetX()) && floor(_y) == floor(_parent->GetY()) ){
+     if(floor(_x) == floor(_parent->GetX()) && floor(_y) == floor(_parent->GetY()) ) {
          _beeState = AT_HOME;
+         _parent->AddNectar(_containsNectar);
+         _containsNectar = 0.f;
          return;
      }
 
     emit WantToMove(_dx,_dy,this);
 
+}
+
+void Bee::EatHonny()
+{
+    float efficientyOfEating = 0.7f;
+    _beelife += _parent->GiveHonny(_TAKE_FOOD_AT_TIME) * efficientyOfEating;
 }
 //        _firstStep = false;
 //    }

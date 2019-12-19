@@ -27,26 +27,28 @@ signals:
     void ToCollect(Bee* beePtr);
 
 public:
-    Bee(/*float x, float y,*/ Hive* parent, World* worldPtr);
+
+    Bee(Hive* parent, World* worldPtr, float capacityOfNectar = 50.0f, float takeFoodAtTime = 5.f , float lifeLevl = 100.f);
     virtual ~Bee() override = default ;
     virtual void SetCoordinates(float x, float y) override;
     virtual float GetX() override;
     virtual float GetY() override;
     bool IfFull();
     void AddNectar(float nectar);
+    std::tuple<float,float,float> GetGeneticParametrs();
 private:
 
     void Move();
     void MoveHome();
+    void EatHonny();
     State _beeState;
     std::mt19937 _gen;
-    unsigned _beelife = 100;
+    float _beelife;
     float _x;
     float _y;
     unsigned _width = 11;
     unsigned _height = 5;
-    unsigned _containsPoolen = 0;
-    float _maxCapacityOfNectar = 15.0;
+//    unsigned _containsPoolen = 0;
 //    unsigned _maxCapacityOfNectar = 10;
     float _containsNectar = 0.0;
     QColor * _color = nullptr;
@@ -55,7 +57,14 @@ private:
     bool _firstStep = true;
     float _dx;
     float _dy;
-    const float _SPEED = 0.3f;
+
+    const float _SPEED = 0.5f;
+    const float _MAX_CAPACITY_OF_NECTAR;
+    const float _TAKE_FOOD_AT_TIME;
+    const float _MAX_LIFE_LEVEL;
+
+
+
     // QGraphicsItem interface
 public:
     QRectF boundingRect() const;

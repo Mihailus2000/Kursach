@@ -173,13 +173,12 @@ void World::MoveObject(float dx, float dy, IObjects *ptr, Container *contPtr)
     auto objX = ptr->GetX();
 
 
-
     if(objX+dx > 0 && objY+dy > 0 && objX+dx < _scaleX*(_width-1) &&  objY+dy < _scaleY*(_height-1)) {
 
         unsigned newX = static_cast<unsigned>(std::floor(static_cast<double>(objX+dx)));
         unsigned newY = static_cast<unsigned>(std::floor(static_cast<double>(objY+dy)));
 
-        if(( newX < _width-1 && newX >= 0 )&&( newY < _height-1 && newY >= 0)) {
+        if(( newX <= _width-1 && newX >= 0 )&&( newY <= _height-1 && newY >= 0)) {
             if(newX != contPtr->GetX() || newY != contPtr->GetY()) {
                 QString coordStr = "coordX"+QString::number(newX) +"coordY"+QString::number(newY);
 

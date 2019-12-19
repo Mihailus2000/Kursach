@@ -30,6 +30,7 @@ signals:
 private slots:
     void BeeWanToCollect(Bee* bee);
     void WantToMove(float dx,float dy, IObjects* objPtr);
+    void GenerateNewBee(Bee *bee);
 public:
     Container(unsigned x, unsigned y);
     virtual ~Container() = default;
