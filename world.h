@@ -37,9 +37,9 @@ public:
     TMap* _map;
 
 private:
-    const unsigned _BEE_AMOUNT = 3;
-    const unsigned _HIVE_AMOUNT = 1;
-    const unsigned _FLOWERS_AMOUNT = 100;
+    const unsigned _BEE_AMOUNT = 5;
+    const unsigned _HIVE_AMOUNT = 2;
+    const unsigned _FLOWERS_AMOUNT = 35;
 
 };
 

@@ -12,8 +12,8 @@ int main(int argc, char *argv[])
     unsigned widgetWidth = 1000;
     unsigned widgetHeight = 600;
 
-    unsigned worldWidth = 20;
-    unsigned worldHeight = 10;
+    unsigned worldWidth = 10;
+    unsigned worldHeight = 5;
 
     MainWindow w(nullptr,widgetWidth,widgetHeight);
     World* world = nullptr;

@@ -61,12 +61,12 @@ void World::Run()
         dT = std::abs(time.msecsTo(QTime::currentTime())); //250 - 220 = 30
         dT1 = std::abs(time1.msecsTo(QTime::currentTime())); //250 - 220 = 30
 
-        if(dT > 20){
+        if(dT > 60){
             Redraw();
             time = QTime::currentTime(); //220
         }
 
-        if(dT1 > 10){
+        if(dT1 > 40){
             Recalc();
             time1 = QTime::currentTime(); //220
         }
@@ -91,23 +91,23 @@ void World::AddLife()
             unsigned y = Y(_gen);
             QString xStr = "coordX"+QString::number(x)+"coordY"+QString::number(y);
             if(_map->find(xStr) == _map->end()){
-                auto cont = new Container(x,y);
+                auto cont = new Container(x,y, this);
                 connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
                 connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
                 connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
 
                 _map->insert(xStr, cont);
-                Hive* newHive = cont->AddHive(this);
+                Hive* newHive = cont->AddHive();
                 for(unsigned j = 0; j < _BEE_AMOUNT; j++){
-                    cont->AddBee(newHive, this);
+                    cont->AddBee(newHive);
                 }
             }
             else{
                     auto cont = *_map->find(xStr);
                 if(!cont->CheckFromHive()) {
-                    Hive* newHive = cont->AddHive(this);
+                    Hive* newHive = cont->AddHive();
                     for(unsigned j = 0; j < _BEE_AMOUNT; j++){
-                        cont->AddBee(newHive, this);
+                        cont->AddBee(newHive);
                     }
                 }
             
@@ -119,17 +119,17 @@ void World::AddLife()
             unsigned y = Y(_gen);
             QString xStr = "coordX"+QString::number(x)+"coordY"+QString::number(y);
             if(_map->find(xStr) == _map->end()){
-                auto cont = new Container(x,y);
+                auto cont = new Container(x,y, this);
                 connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
                 connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
                 connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
                 _map->insert(xStr, cont);
-                cont->AddFlower(this);
+                cont->AddFlower();
             }
             else{
                 auto cont = *_map->find(xStr);
                 if(!cont->CheckFromHive())
-                    cont->AddFlower(this);
+                    cont->AddFlower();
             }
 
         }
@@ -183,7 +183,7 @@ void World::MoveObject(float dx, float dy, IObjects *ptr, Container *contPtr)
                 QString coordStr = "coordX"+QString::number(newX) +"coordY"+QString::number(newY);
 
                 if(_map->find(coordStr) == _map->end()){
-                    auto cont = new Container(newX,newY);
+                    auto cont = new Container(newX,newY, this);
                     connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
                     connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
                     connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);

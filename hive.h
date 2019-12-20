@@ -27,23 +27,25 @@ public:
     virtual void SetCoordinates(float x, float y) override;
     QColor* GetColor();
     unsigned GetSize();
-    void AddNectar(float addedNectar);
+    float AddNectar(float addedNectar);
     float GiveHonny(float howMuchTakeHonny);
     void AddBeeToMemory(Bee* bee);
     void RemoveBeeFromMemory(Bee* bee);
 private:
+    unsigned _generationNumber = 0;
     float _x;
     float _y;
     unsigned _size = 40;
     QColor* _color = nullptr;
     float _scaleX, _scaleY;
     float _containsNectar = 0.f;
-    float _containsHonny = 0.f;
-    const float _MAX_CAPACITY_OF_NECTAR = 200.f;
+    float _containsHonny = 100.f;
     QSet<Bee*> _poolOfBees;
     QTimer *timer;
     World* _ptrToWorld;
-
+    const float _MAX_CAPACITY_OF_NECTAR = 200.f;
+    const float _MAX_CHANGE_OF_PARAMETR = 0.5f;
+    const unsigned _MAX_AMOUNT_OF_BEES = 20;
     void GenerateColorOfThis();
 
 public:

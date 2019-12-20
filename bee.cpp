@@ -23,10 +23,14 @@ void Bee::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
         newX = 0;
     if(newY < 0 )
         newY = 0;
-
+    QColor gen1Color(_gen.at(0),_gen.at(1),_gen.at(2));
 //    painter->drawRect(static_cast<int>(_x*_scaleX),static_cast<int>(_y*_scaleY),static_cast<int>(_scaleX), static_cast<int>(_scaleY));
+      painter->setBrush(*_color);
     painter->drawEllipse(newX,newY,static_cast<int>(_width),static_cast<int>(_height));
-    painter->drawText(newX+_width,newY,QString::number(_containsNectar));
+      painter->setBrush(gen1Color);
+      painter->drawEllipse(newX,newY,static_cast<int>(6),static_cast<int>(5));
+
+    painter->drawText(newX+_width,newY,QString::number(_containsNectar) +  "|" + QString::number(_BeeHealth));
 //    QString coord =
 //    painter->drawEllipse(static_cast<int>(_x*_scaleX-_width/2),static_cast<int>(_y*_scaleY-_height/2), _width, _height);
 //    QDebug(QtMsgType::QtInfoMsg) << "INFO: Draw bee   :  (" << newX << "x" << newY << ")";
@@ -39,11 +43,22 @@ void Bee::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
 
 void Bee::Work()
 {
-    _beelife -= 0.5f;
+//    auto CheckForDie = [&](){
+//        if(_BeeHealth <= 0.f){
+//            _beeState = DIE;
+//            return;
+//        }
+//    };
+
     if(_beeState == FLY){
         Move();
+        _BeeHealth -= 0.05f; //TODO WHAT TO do with it??????????????
 
-        if(_beelife <= _MAX_LIFE_LEVEL * 0.1f){
+        if(_BeeHealth <= _beeLife * 0.1f){
+            if(_BeeHealth <= 0.f) {
+                _beeState = DIE;
+                return;
+            }
             _beeState = FLY_BACK;
             return;
         }
@@ -55,31 +70,43 @@ void Bee::Work()
         return;
     }
     if(_beeState == FLY_BACK){
+        _BeeHealth -= 0.1f;
+        if(_BeeHealth <= 0.f){
+            _beeState = DIE;
+            return;
+        }
         MoveHome();
         //NOTHING
-    }if(_beeState == AT_HOME){
+    }
+    if(_beeState == AT_HOME){
         // TODO
         EatHonny();
+    }
+    if(_beeState == DIE){
+        emit DeleteBee(this);
     }
 
 }
 
-Bee::Bee(Hive* parent, World* worldPtr, float capacityOfNectar, float takeFoodAtTime,float lifeLevel) :
-    _MAX_CAPACITY_OF_NECTAR (capacityOfNectar), _TAKE_FOOD_AT_TIME(takeFoodAtTime), _MAX_LIFE_LEVEL(lifeLevel)
+Bee::Bee(Hive* parent, World* worldPtr, QVector<int> gen)
 {
-    _beelife = _MAX_LIFE_LEVEL;
+    _capacityOfNectar = _MAX_CAPACITY_OF_NECTAR / 255 * gen.at(0);
+    _currentTakingFoodAtTime = _TAKE_FOOD_AT_TIME / 255 * gen.at(1);
+    _beeLife = _MAX_LIFE_LEVEL / 255 * gen.at(2);
+
+    _gen = gen;
 
     _scaleY = worldPtr->_scaleY;
     _scaleX = worldPtr->_scaleX;
     _x = parent->GetX();
     _y = parent->GetY();
-
+    _BeeHealth = _beeLife;
 
     _parent = parent;
     _color = parent->GetColor();
 
 //    std::random_device device;
-    _gen.seed(rand());
+    _generator.seed(rand());
     _beeState = FLY;
 //    std::uniform_real_distribution<int> speed(0, 0.5);
 
@@ -98,7 +125,7 @@ float Bee::GetY(){ return _y; }
 
 bool Bee::IfFull()
 {
-    if(_containsNectar >= _MAX_CAPACITY_OF_NECTAR)
+    if(_containsNectar >= _capacityOfNectar)
         return true;
     else
         return false;
@@ -106,16 +133,21 @@ bool Bee::IfFull()
 
 void Bee::AddNectar(float nectar)
 {
-    if(_containsNectar+nectar >= _MAX_CAPACITY_OF_NECTAR){
-        _containsNectar = _MAX_CAPACITY_OF_NECTAR;
+    if(_containsNectar+nectar >= _capacityOfNectar){
+        _containsNectar = _capacityOfNectar;
     }
     else
         _containsNectar += nectar;
 }
 
-std::tuple<float, float, float> Bee::GetGeneticParametrs()
+QVector<int> Bee::GetGeneticParametrs()
 {
-    return {_MAX_CAPACITY_OF_NECTAR, _TAKE_FOOD_AT_TIME,_MAX_LIFE_LEVEL};
+    return _gen;
+}
+
+Hive *Bee::GetParent()
+{
+    return _parent;
 }
 
 void Bee::Move()
@@ -123,7 +155,7 @@ void Bee::Move()
     std::uniform_real_distribution<float> step(-0.2,0.2);// диапазон шага
 
 //    QDebug(QtMsgType::QtInfoMsg) << "INFO: Bee Move";
-    emit WantToMove(step(_gen),step(_gen), this);
+    emit WantToMove(step(_generator),step(_generator), this);
 }
 
 void Bee::MoveHome()
@@ -166,9 +198,10 @@ void Bee::MoveHome()
         }
         else{
             _beeState = AT_HOME;
-            _parent->AddNectar(_containsNectar);
-            _containsNectar = 0.f;
+            auto leftToAdd = _parent->AddNectar(_containsNectar);
+            _containsNectar = leftToAdd;
             return;
+
         }
      }
      if(floor(_x) == floor(_parent->GetX()) && floor(_y) == floor(_parent->GetY()) ) {
@@ -184,8 +217,29 @@ void Bee::MoveHome()
 
 void Bee::EatHonny()
 {
-    float efficientyOfEating = 0.7f;
-    _beelife += _parent->GiveHonny(_TAKE_FOOD_AT_TIME) * efficientyOfEating;
+    if(_containsNectar == 0.f && _BeeHealth >= _beeLife){
+        _beeState = FLY;
+    }
+    else{
+        if(_containsNectar != 0.f){
+            auto leftToAdd = _parent->AddNectar(_containsNectar);
+            _containsNectar = leftToAdd;
+        }
+        if(_BeeHealth < _beeLife){
+            float efficientyOfEating = 0.7f;
+            auto givenHonny = _parent->GiveHonny(_currentTakingFoodAtTime);
+            if(givenHonny != 0.0f){
+                _BeeHealth += givenHonny * efficientyOfEating;
+                return;
+            }
+            else{
+                _beeState = FLY;
+                return;
+            }
+        }
+
+    }
+
 }
 //        _firstStep = false;
 //    }

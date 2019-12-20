@@ -13,6 +13,8 @@ class Flower : public QObject, public IObjects
 
 signals:
     void RepaintObject(QGraphicsItem* item);
+    void GenerateClone(Flower* flower);
+    void DeleteFlower(Flower* flower);
 public:
     Flower(float x, float y, World* worldPtr);
     virtual ~Flower() override = default ;
@@ -25,16 +27,18 @@ public:
 private:
     float _x = 0.;
     float _y = 0.;
+    float _health;
     unsigned _flowerSize = 5;
-    unsigned _lifeLevel = 100;
-    bool _bloomed = false;
+//    bool _bloomed = false;
     float _scaleX, _scaleY;
-    float _maxCapacityOfNectar = 100.0;
+    float _maxCapacityOfNectar = 10.0;
     float _containsNectar = _maxCapacityOfNectar;
     float _drawingX;
     float _drawingy;
     const float _COLLECT_SPEED = 0.5f;
     bool _firstDraw = true;
+
+    float _lifeLevel = 40.;
 
 
     // IObjects interface

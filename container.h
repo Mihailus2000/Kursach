@@ -23,6 +23,7 @@ private:
     BeeSimulator* beePtr = nullptr;*/
     int _count = 0;
     std::mt19937 _gen;
+    World* _myWorld;
 signals:
     void RepaintObj(QGraphicsItem* item);
     void ObjectWantToMove(float dx,float dy, IObjects* objPtr, Container* contPtr);
@@ -31,8 +32,10 @@ private slots:
     void BeeWanToCollect(Bee* bee);
     void WantToMove(float dx,float dy, IObjects* objPtr);
     void GenerateNewBee(Bee *bee);
+    void DeleteObject(IObjects* obj);
+    void GenerateClone(IObjects* obj);
 public:
-    Container(unsigned x, unsigned y);
+    Container(unsigned x, unsigned y, World* ptr);
     virtual ~Container() = default;
     unsigned GetX();
     unsigned GetY();
@@ -75,11 +78,11 @@ public:
         }
     }*/
 
-    void AddFlower(World* worldPtr);
+    void AddFlower(/*World* worldPtr*/);
     void AddObject(IObjects* obj);
     bool RemoveObject(IObjects *obj);
-    void AddBee(Hive* parrent, World* worldPtr);
-    Hive* AddHive(World* worldPtr);
+    void AddBee(Hive* parrent/*, World* worldPtr*/);
+    Hive* AddHive(/*World* worldPtr*/);
 /*    void AddHive() {
         _objArr.insert(++_count,new Hive);
     }

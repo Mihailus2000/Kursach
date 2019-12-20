@@ -7,7 +7,7 @@ Flower::Flower(float x, float y, World *worldPtr) : QObject()
 {
     _x = x;
     _y = y;
-
+    _health = _lifeLevel;
     _scaleY = worldPtr->_scaleY;
     _scaleX = worldPtr->_scaleX;
 }
@@ -63,11 +63,11 @@ void Flower::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
         _firstDraw = false;
     }
 
-    if(_lifeLevel < 10)
+    if(_health < 10)
         painter->setBrush(Qt::black);
 //    painter->drawRect(static_cast<int>(_x*_scaleX/*+_scaleX/2*/),static_cast<int>(_y*_scaleY/*+_scaleY/2*/),static_cast<int>(_scaleX), static_cast<int>(_scaleY));
     painter->drawEllipse( _drawingX, _drawingy, _flowerSize, _flowerSize);
-    painter->drawText(static_cast<int>(_drawingX+/*_scaleX/2*/_flowerSize),static_cast<int>(_drawingy+_flowerSize),QString::number(_containsNectar));
+    painter->drawText(static_cast<int>(_drawingX+/*_scaleX/2*/_flowerSize),static_cast<int>(_drawingy+_flowerSize),QString::number(_containsNectar)+"|"+QString::number(_health));
 //    widget->repaint();
     Q_UNUSED(option)
     Q_UNUSED(widget)
@@ -75,7 +75,16 @@ void Flower::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 
 void Flower::Work()
 {
-
+    if(_health > 0.f){
+        if(_containsNectar == 0.f){ // its means that flower is dusted
+            emit GenerateClone(this);
+            _containsNectar = _maxCapacityOfNectar;
+        }
+    }
+    else{
+        emit DeleteFlower(this);
+    }
+    _health -= 0.05f;
 }
 
 void Flower::SetCoordinates(float x, float y)

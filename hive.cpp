@@ -3,6 +3,7 @@
 #include <random>
 #include "world.h"
 #include "bee.h"
+#include <QVector>
 
 void Hive::GenerateNewBee()
 {
@@ -10,22 +11,41 @@ void Hive::GenerateNewBee()
     float sumCapacityOfNectar = 0.f;
     float sumTakeFoodTime = 0.f;
     float sumMaxLifeLevel = 0.f;
-    for(auto bee : _poolOfBees){
-        float p1,p2,p3;
-        std::tie(p1,p2,p3) = bee->GetGeneticParametrs();
-        sumCapacityOfNectar += p1;
-        sumTakeFoodTime += p2;
-        sumMaxLifeLevel += p3;
-    }
-
+    QVector<int> gen,avgGen;
+    bool firstReservation = true;
     int amountOfBees = _poolOfBees.size();
-    float averageP1 = sumCapacityOfNectar / amountOfBees;
-    float averageP2 = sumTakeFoodTime / amountOfBees;
-    float averageP3 = sumMaxLifeLevel / amountOfBees;
+    if(amountOfBees > 0){
+        for(auto bee : _poolOfBees){
+            gen = bee->GetGeneticParametrs();
+//                avgGen.reserve(gen.size());
+            for(auto i =0;i < gen.size();i++){
+                if(firstReservation){
+                    avgGen.push_back(gen.at(i));
+                }
+                else{
+                    avgGen[i] += gen.at(i);
+                }
+            }
+            firstReservation = false;
+        }
 
-    Bee* newBee = new Bee(this, _ptrToWorld, averageP1, averageP2, averageP3);
-    emit WantGenerateNewBee(newBee);
+        for(auto i =0; i < avgGen.size();i++)
+            avgGen[i] = round(avgGen[i]/(amountOfBees));
 
+//        float averageP1 = sumCapacityOfNectar / amountOfBees;
+//        float averageP2 = sumTakeFoodTime / amountOfBees;
+//        float averageP3 = sumMaxLifeLevel / amountOfBees;
+
+        if(_generationNumber % 1 == 0 && _poolOfBees.size() <= _MAX_AMOUNT_OF_BEES){
+            std::mt19937 generator(rand());
+            std::uniform_int_distribution<int> mutationGenValue(0,255);
+            std::uniform_int_distribution<int> genIndex(0,avgGen.size()-1);
+            avgGen[genIndex(generator)] = mutationGenValue(generator);
+        }
+        Bee* newBee = new Bee(this, _ptrToWorld, avgGen);
+        emit WantGenerateNewBee(newBee);
+        _generationNumber++;
+    }
 }
 
 Hive::Hive(float x, float y, World* worldPtr) : _x(x+0.5f), _y(y+0.5f) {
@@ -56,13 +76,21 @@ QColor *Hive::GetColor(){ return _color; }
 
 unsigned Hive::GetSize(){ return _size; }
 
-void Hive::AddNectar(float addedNectar)
+float Hive::AddNectar(float addedNectar)
 {
-    if(_containsNectar + addedNectar >= _MAX_CAPACITY_OF_NECTAR){
-        _containsNectar = _MAX_CAPACITY_OF_NECTAR;
+    if(_containsNectar < _MAX_CAPACITY_OF_NECTAR){
+        if(_containsNectar + addedNectar >= _MAX_CAPACITY_OF_NECTAR){
+            auto leftToAdd = _MAX_CAPACITY_OF_NECTAR - (_containsNectar + addedNectar);
+            _containsNectar = _MAX_CAPACITY_OF_NECTAR;
+            return leftToAdd;
+        }
+        else{
+            _containsNectar += addedNectar;
+            return 0.f;
+        }
     }
     else
-        _containsNectar += addedNectar;
+        return false;
 }
 
 void Hive::GenerateColorOfThis()
@@ -87,15 +115,17 @@ void Hive::GenerateColorOfThis()
 
 float Hive::GiveHonny(float howMuchTakeHonny)
 {
-    if(_containsHonny - howMuchTakeHonny >= 0.0f){
+
+    if(howMuchTakeHonny <= _containsHonny){
         _containsHonny -= howMuchTakeHonny;
         return howMuchTakeHonny;
     }
-    else{
+    else {
         float tmp = _containsHonny;
         _containsHonny = 0.f;
         return tmp;
     }
+
 }
 
 void Hive::AddBeeToMemory(Bee *bee){ _poolOfBees.insert(bee); }
