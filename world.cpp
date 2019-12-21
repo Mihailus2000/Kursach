@@ -23,8 +23,14 @@ World::World(unsigned widgetWidth, unsigned widgetHeight, unsigned worldWidth, u
     std::random_device device;
 //   std::time(QTimer);
     _gen.seed(QTime::currentTime().msecsSinceStartOfDay());
-//    connect(_map, &TMap::value, this, &World::RepaintObj);
+    //    connect(_map, &TMap::value, this, &World::RepaintObj);
 }
+
+World::~World()
+{
+//    qDeleteAll(*_map);
+}
+
 
 void World::Run()
 {
@@ -49,8 +55,10 @@ void World::Run()
 
 //    th1->start();
 //    th2->start();
-    QTime time, time1;
+    QTime time, time1, fps, currT;
+//    QTimer FPS;
     time1 = time = QTime::currentTime();
+
 
     auto dT = std::abs(time.msecsTo(QTime::currentTime())); //250 - 220 = 30
     auto dT1 = std::abs(time1.msecsTo(QTime::currentTime())); //250 - 220 = 30
@@ -60,15 +68,18 @@ void World::Run()
     while(true){
         dT = std::abs(time.msecsTo(QTime::currentTime())); //250 - 220 = 30
         dT1 = std::abs(time1.msecsTo(QTime::currentTime())); //250 - 220 = 30
-
-        if(dT > 60){
+        if(dT > 10){
+//            currT.start();
             Redraw();
             time = QTime::currentTime(); //220
+//            QDebug(QtMsgType::QtInfoMsg) << "   INFO: DRAW FPS = " << currT.elapsed();
         }
-
-        if(dT1 > 40){
+        if(dT1 > 100){
+            fps.start();
             Recalc();
             time1 = QTime::currentTime(); //220
+            QDebug(QtMsgType::QtInfoMsg) << "       INFO: CALC FPS = " << fps.elapsed();
+
         }
    }
 
@@ -95,7 +106,7 @@ void World::AddLife()
                 connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
                 connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
                 connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
-
+                connect(cont, &Container::GenerateClone, this, &World::CloneObject);
                 _map->insert(xStr, cont);
                 Hive* newHive = cont->AddHive();
                 for(unsigned j = 0; j < _BEE_AMOUNT; j++){
@@ -123,13 +134,16 @@ void World::AddLife()
                 connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
                 connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
                 connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
+                connect(cont, &Container::GenerateClone, this, &World::CloneObject);
                 _map->insert(xStr, cont);
                 cont->AddFlower();
+                _amountOfFlowers ++;
             }
             else{
                 auto cont = *_map->find(xStr);
                 if(!cont->CheckFromHive())
                     cont->AddFlower();
+                _amountOfFlowers++;
             }
 
         }
@@ -141,19 +155,36 @@ void World::AddLife()
 void World::Redraw()
 {
     auto i = _map->begin();
+    QDebug(QtMsgType::QtInfoMsg) << "------------------------ SSSSSstartDrawContainerSSSSS";
+
     while(i != _map->end()){
 //    for(auto obj : *_map){
+
         (*i)->RedrawObject();
         i++;
     }
+    QDebug(QtMsgType::QtInfoMsg) << "------------------------ EEEEEendDrawContainerSSSSS";
 }
 
 void World::Recalc()
 {
     auto i = _map->begin();
+//    QTime currT;
     while(i != _map->end()){
+//        if(dynamic_cast<Bee*>(*i)){
+//            QDebug(QtMsgType::QtInfoMsg) << "INFO: Bee CALC!";
+//        }
+//        if(dynamic_cast<Flower*>(*i)){
+//            QDebug(QtMsgType::QtInfoMsg) << "INFO: Flower CALC!";
+//        }
+//        if(dynamic_cast<Hive*>(*i)){
+//            QDebug(QtMsgType::QtInfoMsg) << "INFO: Hive CALC!";
+//        }
+//        currT.start();
         (*i)->Recalc();
+//        QDebug(QtMsgType::QtInfoMsg) << "       INFO: CALC FPS = " << currT.elapsed();
         i++;
+
     }
 //    auto delit = contToRemove.begin();
 //    while(delit != contToRemove.end()){
@@ -187,6 +218,7 @@ void World::MoveObject(float dx, float dy, IObjects *ptr, Container *contPtr)
                     connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
                     connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
                     connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
+                    connect(cont, &Container::GenerateClone, this, &World::CloneObject);
                     _map->insert(coordStr, cont);
                     if(contPtr->RemoveObject(ptr)){
 //                        contToRemove.push_back(contPtr->coordStr);
@@ -220,4 +252,70 @@ void World::BeeCollectFromFlower(Bee *bee, Container *itsCont)
         }
     }
 }
+
+void World::CloneObject(IObjects *obj)
+{
+    auto clonedFlower = dynamic_cast<Flower*>(obj);
+    if(clonedFlower) {
+        std::uniform_real_distribution<float> stepRange(0.f, 1.f);
+        float range = stepRange(_gen);
+        std::uniform_real_distribution<float> step(-range,range);// отклоненение появления нового цветка
+        auto x = clonedFlower->GetX();
+        auto y = clonedFlower->GetY();
+        bool findNewCoordinates = false;
+        while(!findNewCoordinates){
+            auto newX  = x + step(_gen);
+            auto newY  = y + step(_gen);
+            if(( floor(newX) <= _width-1 && floor(newX) >= 0 )&&( floor(newY) <= _height-1 && floor(newY) >= 0)) {
+                x = newX;
+                y = newY;
+                findNewCoordinates = true;
+            }
+        }
+        unsigned intX = std::floor(x);
+        unsigned intY =  std::floor(y);
+        QString xStr = "coordX"+QString::number(intX)+"coordY"+QString::number(intY);
+        if(_map->find(xStr) == _map->end()){
+            auto cont = new Container(x,y, this);
+            connect(cont, &Container::RepaintObj, this, &World::RepaintObj);
+            connect(cont, &Container::ObjectWantToMove, this, &World::MoveObject);
+            connect(cont, &Container::BeeCollect, this, &World::BeeCollectFromFlower);
+            connect(cont, &Container::GenerateClone, this, &World::CloneObject);
+            _map->insert(xStr, cont);
+            Flower* newFlower = new Flower(x,y,this);
+            cont->AddObject(newFlower);
+        }
+        else{
+            auto cont = *_map->find(xStr);
+            auto flowers = cont->GetFlowers();
+            if(!cont->CheckFromHive() && static_cast<unsigned>(flowers.size()) <= _MAX_AMOUNT_OF_FLOWERS_IN_COORDINATE){
+                Flower* newFlower = new Flower(x,y,this);
+                cont->AddObject(newFlower);
+            }
+            else{
+                // TODO
+            }
+        }
+//        Flower* newFlower = new Flower(x,y,_myWorld);
+//        connect(newFlower, &Flower::GenerateClone, this, &Container::GenerateClone);
+//        connect(newFlower, &Flower::DeleteFlower, this, &Container::RemoveObject);
+//        _objArr.append(newFlower);
+//        _count++;
+    }
+}
+
+void World::DeleteContainer(Container *cont)
+{
+    QString coord = cont->GetCoordinates();
+    if(_map->find(coord) != _map->end()){
+        Container* cont = *_map->find(coord);
+        int cnt = _map->remove(coord);
+        if(cnt > 1 || cnt == 0){
+            QDebug(QtMsgType::QtFatalMsg) << "FATAL: Remove NOT ONE container!";
+        }
+        delete cont;
+        cont = nullptr;
+    }
+}
+
 

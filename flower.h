@@ -25,21 +25,28 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 private:
-    float _x = 0.;
-    float _y = 0.;
+    float _x = 0.f;
+    float _y = 0.f;
     float _health;
     unsigned _flowerSize = 5;
 //    bool _bloomed = false;
     float _scaleX, _scaleY;
-    float _maxCapacityOfNectar = 10.0;
+    float _maxCapacityOfNectar = 20.0;
     float _containsNectar = _maxCapacityOfNectar;
     float _drawingX;
     float _drawingy;
-    const float _COLLECT_SPEED = 0.5f;
+    float _decreasesHealth = 0.07f;
+    float _lifeLevel = 20.f;
+    int _leftToBirth = 3;
+    unsigned _stepsFromLastClone = 0;
+
+    const float _COLLECT_SPEED = 0.7f;
+    const unsigned _STEPS_TO_NEXT_POSIBLE_CLONING = 40;
+    const float _MIN_START_HEALTH = 10.f;
+    const float _MAX_START_HEALTH = 25.f;
+
     bool _firstDraw = true;
-
-    float _lifeLevel = 40.;
-
+    bool _posibleToClone = true;
 
     // IObjects interface
 public:

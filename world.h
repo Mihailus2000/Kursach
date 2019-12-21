@@ -17,16 +17,22 @@ signals:
     void RepaintObj(QGraphicsItem* item);
 
 public slots:
+//    void DebugFPS();
     void Run();
     void Redraw();
     void Recalc();
     void MoveObject(float dx,float dy, IObjects* ptr, Container* contPtr);
     void BeeCollectFromFlower(Bee* bee, Container* itsCont);
+    void CloneObject(IObjects* obj);
+    void DeleteContainer(Container* cont);
 public:
     using TMap = QMap<QString, Container*>;
 
     unsigned contAmount;
+//    void CloseProgram();
     World(unsigned widgetWidth, unsigned widgetHeight, unsigned worldWidth, unsigned worldHeight);
+    ~World();
+
     void AddLife();
     float _scaleX, _scaleY;
     unsigned _width;
@@ -37,9 +43,13 @@ public:
     TMap* _map;
 
 private:
-    const unsigned _BEE_AMOUNT = 5;
-    const unsigned _HIVE_AMOUNT = 2;
-    const unsigned _FLOWERS_AMOUNT = 35;
+    unsigned _amountOfFlowers = 0;
+
+
+    const unsigned _BEE_AMOUNT = 3;
+    const unsigned _HIVE_AMOUNT = 3;
+    const unsigned _FLOWERS_AMOUNT = 50  ;
+    const unsigned _MAX_AMOUNT_OF_FLOWERS_IN_COORDINATE = 5;
 
 };
 

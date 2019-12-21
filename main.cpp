@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     unsigned worldWidth = 10;
     unsigned worldHeight = 5;
 
-    MainWindow w(nullptr,widgetWidth,widgetHeight);
+    MainWindow w(nullptr,widgetWidth,widgetHeight, &a);
     World* world = nullptr;
     world = new World(widgetWidth, widgetHeight, worldWidth, worldHeight);
     w.GetWorldRef(world);

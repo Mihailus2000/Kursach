@@ -28,15 +28,17 @@ signals:
     void RepaintObj(QGraphicsItem* item);
     void ObjectWantToMove(float dx,float dy, IObjects* objPtr, Container* contPtr);
     void BeeCollect(Bee* bee, Container* thisCont);
+    void GenerateClone(IObjects* obj);
+    void DeleteContainer(Container* cont);
 private slots:
     void BeeWanToCollect(Bee* bee);
     void WantToMove(float dx,float dy, IObjects* objPtr);
     void GenerateNewBee(Bee *bee);
     void DeleteObject(IObjects* obj);
-    void GenerateClone(IObjects* obj);
 public:
+    QString GetCoordinates();
     Container(unsigned x, unsigned y, World* ptr);
-    virtual ~Container() = default;
+    virtual ~Container();
     unsigned GetX();
     unsigned GetY();
     void RedrawObject();
@@ -45,7 +47,7 @@ public:
     unsigned _y;
     QSet<Flower *> GetFlowers();
     bool CheckFromHive();
-    QString coordStr;
+    QString _coordStr;
 
 
 /*

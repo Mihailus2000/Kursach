@@ -1,5 +1,5 @@
 #include "container.h"
-
+#include <QTime>
 //#include "bee.h"
 #include "world.h"
 #include <QApplication>
@@ -24,34 +24,68 @@ void Container::GenerateNewBee(Bee *bee)
 void Container::DeleteObject(IObjects *obj)
 {
     auto deletingBee = dynamic_cast<Bee*>(obj);
+    auto deletingFlower = dynamic_cast<Flower*>(obj);
     if(deletingBee){
         Hive* beeHive = deletingBee->GetParent();
         beeHive->RemoveBeeFromMemory(deletingBee);
     }
+    if(deletingFlower){
+        QDebug(QtMsgType::QtWarningMsg) << "INFO: Deleting flower!";
+    }
     _objArr.removeOne(obj);
+    _count--;
     delete obj;
+    obj = nullptr;
+
+    if(_count == 0) {
+        if(_objArr.size() == 0){
+//            QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete container :" << _x << "," << _y;
+//            QDebug(QtMsgType::QtInfoMsg) << "INFO: left objects :" << _count << "\n\n";
+            DeleteContainer(this);
+        }
+        else{
+            QDebug(QtMsgType::QtFatalMsg) << "INFO: left objects :" << _count << " instead of 0!!\n\n";
+//            return false;
+        }
+//        this->deleteLater();
+//        QApplication::processEvents();
+    }
+//    else{
+//        return false;
+    //    }
 }
 
-void Container::GenerateClone(IObjects *obj)
+QString Container::GetCoordinates()
 {
-    auto clonedFlower = dynamic_cast<Flower*>(obj);
-    if(clonedFlower) {
-        std::uniform_real_distribution<float> step(-0.99f,0.99f);// отклоненение появления нового цветка
-        auto x = clonedFlower->GetX();
-        auto y = clonedFlower->GetY();
-        x += step(_gen);
-        y += step(_gen);
-        Flower* newFlower = new Flower(x,y,_myWorld);
-        connect(newFlower, &Flower::GenerateClone, this, &Container::GenerateClone);
-        connect(newFlower, &Flower::DeleteFlower, this, &Container::RemoveObject);
-        _objArr.append(newFlower);
-        _count++;
-    }
+    return _coordStr;
 }
+
+//void Container::GenerateClone(IObjects *obj)
+//{
+//    auto clonedFlower = dynamic_cast<Flower*>(obj);
+//    if(clonedFlower) {
+//        std::uniform_real_distribution<float> step(-0.99f,0.99f);// отклоненение появления нового цветка
+//        auto x = clonedFlower->GetX();
+//        auto y = clonedFlower->GetY();
+//        x += step(_gen);
+//        y += step(_gen);
+//        Flower* newFlower = new Flower(x,y,_myWorld);
+//        connect(newFlower, &Flower::GenerateClone, this, &Container::GenerateClone);
+//        connect(newFlower, &Flower::DeleteFlower, this, &Container::RemoveObject);
+//        _objArr.append(newFlower);
+//        _count++;
+//    }
+//}
 
 Container::Container(unsigned x, unsigned y, World* ptr) : _x(x), _y(y), _myWorld(ptr) {
-     coordStr = "coordX"+QString::number(x) +"coordY"+QString::number(y);
+     _coordStr = "coordX"+QString::number(x) +"coordY"+QString::number(y);
      _gen.seed(rand());
+}
+
+Container::~Container()
+{
+    qDeleteAll(_objArr);
+
 }
 
 unsigned Container::GetX()
@@ -72,7 +106,7 @@ void Container::AddFlower() {
 
     Flower* newFlower = new Flower(newX, newY,_myWorld);
     connect(newFlower, &Flower::GenerateClone, this, &Container::GenerateClone);
-    connect(newFlower, &Flower::DeleteFlower, this, &Container::RemoveObject);
+    connect(newFlower, &Flower::DeleteFlower, this, &Container::DeleteObject);
 
     _objArr.append(newFlower);
     _count++;
@@ -91,7 +125,11 @@ void Container::AddObject(IObjects *obj)
         connect(bee, &Bee::ToCollect, this, &Container::BeeWanToCollect, Qt::DirectConnection);
         connect(bee, &Bee::DeleteBee, this, &Container::DeleteObject);
     }
-
+    if(dynamic_cast<Flower*>(obj)){
+        auto flower = dynamic_cast<Flower*>(obj);
+        connect(flower, &Flower::GenerateClone, this, &Container::GenerateClone);
+        connect(flower, &Flower::DeleteFlower, this, &Container::DeleteObject);
+    }
 //    if(dynamic_cast<Flower*>(obj))
 //        QDebug(QtMsgType::QtInfoMsg) << "INFO: Add flower(object)! : " << obj->GetX() << "," << obj->GetY();
 //    if(dynamic_cast<Hive*>(obj))
@@ -104,37 +142,38 @@ void Container::AddObject(IObjects *obj)
 
 bool Container::RemoveObject(IObjects *obj)
 {
-    if(_objArr.removeOne(obj)){
-//        connect(obj, &Bee::WantToMove, this, &Container::WantToMove);
-        auto deletingFlower = dynamic_cast<Flower*>(obj);
-        auto deletingHive = dynamic_cast<Hive*>(obj);
-        auto deletingBee = dynamic_cast<Bee*>(obj);
-//        if(deletingFlower){
-//            QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete flower! : " << obj->GetX() << "," << obj->GetY();
-//            // TODO : Add here all disconnects!
-//        }
-//        if(deletingHive){
-//            QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete hive! : " << obj->GetX() << "," << obj->GetY();
-//            // TODO : Add here all disconnects!
-//        }
-        if(deletingBee){
-//            QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete bee! : " << obj->GetX() << "," << obj->GetY();
-            disconnect(deletingBee, &Bee::WantToMove, this, &Container::WantToMove);
-            disconnect(deletingBee, &Bee::ToCollect, this, &Container::BeeWanToCollect);
-            disconnect(deletingBee, &Bee::DeleteBee, this, &Container::DeleteObject);
+    _objArr.removeAll(obj);
+//    connect(obj, &Bee::WantToMove, this, &Container::WantToMove);
+    auto deletingFlower = dynamic_cast<Flower*>(obj);
+    auto deletingHive = dynamic_cast<Hive*>(obj);
+    auto deletingBee = dynamic_cast<Bee*>(obj);
 
-        }
-        if(deletingFlower){
-            disconnect(deletingFlower, &Flower::GenerateClone, this, &Container::GenerateClone);
-            disconnect(deletingFlower, &Flower::DeleteFlower, this, &Container::RemoveObject);
-            delete deletingFlower;
-        }
-//        QDebug(QtMsgType::QtInfoMsg) << "INFO: delete from :" << _x << "," << _y;
-
-        _count--;
+//    if(deletingFlower){
+//        QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete flower! : " << obj->GetX() << "," << obj->GetY();
+//        // TODO : Add here all disconnects!
+//    }
+    if(deletingHive){
+        QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete hive! : " << obj->GetX() << "," << obj->GetY();
+        // TODO : Add here all disconnects!
     }
+    if(deletingBee){
+          QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete bee! : " << obj->GetX() << "," << obj->GetY();
+        disconnect(deletingBee, &Bee::WantToMove, this, &Container::WantToMove);
+        disconnect(deletingBee, &Bee::ToCollect, this, &Container::BeeWanToCollect);
+        disconnect(deletingBee, &Bee::DeleteBee, this, &Container::DeleteObject);
 
-    if(_count == 0){
+    }
+//    if(deletingFlower){
+//        disconnect(deletingFlower, &Flower::GenerateClone, this, &Container::GenerateClone);
+//        disconnect(deletingFlower, &Flower::DeleteFlower, this, &Container::DeleteObject);
+//        delete deletingFlower;
+//        deletingFlower = nullptr;
+//    }
+//      QDebug(QtMsgType::QtInfoMsg) << "INFO: delete from :" << _x << "," << _y;
+
+    _count--;
+
+    if(_count == 0) {
         if(_objArr.size() == 0){
 //            QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete container :" << _x << "," << _y;
 //            QDebug(QtMsgType::QtInfoMsg) << "INFO: left objects :" << _count << "\n\n";
@@ -180,14 +219,41 @@ Hive *Container::AddHive()
 void Container::RedrawObject()
 {
     auto i = _objArr.begin();
+    QTime currT;
+    int cnt = 0;
+    QDebug(QtMsgType::QtInfoMsg) << "------ startDrawContainer";
     while(i!=_objArr.end()){
-
 //        for(auto obj : _objArr){
-        if(*i != nullptr)
+        if(dynamic_cast<QGraphicsItem*>(*i) != nullptr){
+            if(dynamic_cast<Bee*>(*i)){
+                QDebug(QtMsgType::QtInfoMsg) << "INFO: Bee DRAW!";
+            }
+            else{
+                if(dynamic_cast<Flower*>(*i)){
+                    QDebug(QtMsgType::QtInfoMsg) << "INFO: Flower DRAW!";
+                }
+                else{
+                    if(dynamic_cast<Hive*>(*i)){
+                        QDebug(QtMsgType::QtInfoMsg) << "INFO: Hive DRAW!";
+                    }
+                    else{
+                        QDebug(QtMsgType::QtInfoMsg) << "INFO: UNKNOWN DRAW! Type : " << typeid(*i).name();
+                    }
+                }
+            }
+            currT.start();
             emit RepaintObj(dynamic_cast<QGraphicsItem*>(*i));
-//        else
-  //          QDebug(QtMsgType::QtWarningMsg) << "WRN: Phantom object!";
-        i++;
+            QDebug(QtMsgType::QtInfoMsg) << "   INFO: DRAW FPS = " << currT.elapsed() << "\n----";
+//            i++;
+
+        }
+        else{
+            QDebug(QtMsgType::QtInfoMsg) << "INFO: ???Succesfull redraw elements : " << cnt << "\n-----";
+            QDebug(QtMsgType::QtFatalMsg) << "FATAL: Phantom object!";
+        }
+        ++i;
+        cnt++;
+        QDebug(QtMsgType::QtInfoMsg) << "INFO: Succesfull redraw elements : " << cnt << "\n-----";
     }
 
 }

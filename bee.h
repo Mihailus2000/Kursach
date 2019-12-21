@@ -35,7 +35,7 @@ public:
 //    float capacityOfNectar = 50.0f, float
 //    takeFoodAtTime = 5.f , float lifeLevel = 100.f
     Bee(Hive* parent, World* worldPtr, QVector<int> gen = {128,128,128});
-    virtual ~Bee() override = default ;
+    virtual ~Bee() override;
     virtual void SetCoordinates(float x, float y) override;
     virtual float GetX() override;
     virtual float GetY() override;
@@ -44,22 +44,21 @@ public:
     QVector<int> GetGeneticParametrs();
     Hive* GetParent();
 private:
+    Hive* _parent = nullptr;
     QVector<int> _gen;
     void Move();
     void MoveHome();
     void EatHonny();
-    State _beeState;
     std::mt19937 _generator;
+    State _beeState;
     float _BeeHealth;
     float _x;
-    float _y;    unsigned _height = 5;
     //    unsigned _containsPoolen = 0;
     //    unsigned _maxCapacityOfNectar = 10;
 
+    float _y;    unsigned _height = 5;
     unsigned _width = 11;
     float _containsNectar = 0.0;
-    QColor * _color = nullptr;
-    Hive* _parent = nullptr;
     float _scaleX, _scaleY;
     bool _firstStep = true;
     float _dx;
@@ -69,13 +68,17 @@ private:
     float _currentTakingFoodAtTime;
     float _beeLife;
 
+    QColor * _color = nullptr;
 
     const float _SPEED = 0.5f;
-    const float _MAX_CAPACITY_OF_NECTAR = 100.f; // for ideal bee
+    const float _MAX_CAPACITY_OF_NECTAR = 70.f; // for ideal bee
     const float _TAKE_FOOD_AT_TIME = 3.f;// for ideal bee
-    const float _MAX_LIFE_LEVEL = 100.f;// for ideal bee
+    const float _MAX_LIFE_LEVEL = 60.f;// for ideal bee
+    const float _MAX_WIDTH = 23.3;
+    const float _MAX_HEIGHT = 10;
 
-
+    const float _MIN_WIDTH = 7.;
+    const float _MIN_HEIGHT = 3.;
 
     // QGraphicsItem interface
 public:

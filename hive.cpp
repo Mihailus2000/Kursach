@@ -4,6 +4,7 @@
 #include "world.h"
 #include "bee.h"
 #include <QVector>
+#include <iomanip>
 
 void Hive::GenerateNewBee()
 {
@@ -36,11 +37,12 @@ void Hive::GenerateNewBee()
 //        float averageP2 = sumTakeFoodTime / amountOfBees;
 //        float averageP3 = sumMaxLifeLevel / amountOfBees;
 
-        if(_generationNumber % 1 == 0 && _poolOfBees.size() <= _MAX_AMOUNT_OF_BEES){
+        if(_generationNumber % 3 == 0 && _poolOfBees.size()  <=_MAX_AMOUNT_OF_BEES){
             std::mt19937 generator(rand());
-            std::uniform_int_distribution<int> mutationGenValue(0,255);
+            std::uniform_int_distribution<int> mutationGenValue(1,16/*255*/);
             std::uniform_int_distribution<int> genIndex(0,avgGen.size()-1);
-            avgGen[genIndex(generator)] = mutationGenValue(generator);
+            auto value = mutationGenValue(generator)*16-1;
+            avgGen[genIndex(generator)] = value;
         }
         Bee* newBee = new Bee(this, _ptrToWorld, avgGen);
         emit WantGenerateNewBee(newBee);
@@ -55,11 +57,13 @@ Hive::Hive(float x, float y, World* worldPtr) : _x(x+0.5f), _y(y+0.5f) {
     _ptrToWorld = worldPtr;
     timer = new QTimer;
     connect(timer, &QTimer::timeout, this, &Hive::GenerateNewBee);
-    timer->start(15000);
+    timer->start(_TIMER_TO_BIRTH);
 }
 
 Hive::~Hive() {
     delete _color;
+    qDeleteAll(_poolOfBees);
+    delete timer;
 }
 
 float Hive::GetX() { return _x;}
@@ -140,7 +144,10 @@ void Hive::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     painter->setBrush(*_color);
     painter->drawRect(static_cast<int>(_x*_scaleX-_size/2/* + _scaleX/2*/), static_cast<int>(_y*_scaleY-_size/2/*+_scaleY/2*/),
                       static_cast<int>(_size),static_cast<int>(_size));
-    painter->drawText((_x*_scaleX)+_size/2,_y*_scaleY,/*QString::number(_x)+"x"+QString::number(_y)*/QString::number(_containsNectar) + " | " + QString::number(_containsHonny));
+
+    painter->setPen(Qt::GlobalColor::darkGray);
+//    auto text = QString::number(_containsNectar,'f',2) + " | " + QString::number(_containsHonny,'f',2);
+//    painter->drawText((_x*_scaleX)-29,_y*_scaleY+35,/*QString::number(_x)+"x"+QString::number(_y)*/text);
 
     Q_UNUSED(option)
     Q_UNUSED(widget)

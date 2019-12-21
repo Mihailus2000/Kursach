@@ -4,7 +4,9 @@
 #include <QWidget>
 #include "world.h"
 
-QRectF Bee::boundingRect() const { return QRectF(0,0,_width,_width); }
+QRectF Bee::boundingRect() const {
+    return QRectF(0,0,_MAX_WIDTH/255*_gen[0]+_MIN_WIDTH, _MAX_HEIGHT/255*_gen[0]+_MIN_HEIGHT);
+}
 
 void Bee::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -26,11 +28,18 @@ void Bee::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
     QColor gen1Color(_gen.at(0),_gen.at(1),_gen.at(2));
 //    painter->drawRect(static_cast<int>(_x*_scaleX),static_cast<int>(_y*_scaleY),static_cast<int>(_scaleX), static_cast<int>(_scaleY));
       painter->setBrush(*_color);
-    painter->drawEllipse(newX,newY,static_cast<int>(_width),static_cast<int>(_height));
+    painter->drawEllipse(newX,newY,static_cast<int>(_MAX_WIDTH/255*_gen[0]+_MIN_WIDTH),static_cast<int>(_MAX_HEIGHT/255*_gen[0]+_MIN_HEIGHT));
       painter->setBrush(gen1Color);
-      painter->drawEllipse(newX,newY,static_cast<int>(6),static_cast<int>(5));
+      painter->drawEllipse(newX,newY,static_cast<int>((_MAX_WIDTH/255*_gen[0]+_MIN_WIDTH)/2),static_cast<int>((_MAX_WIDTH/255*_gen[0]+_MIN_HEIGHT)/2));
 
-    painter->drawText(newX+_width,newY,QString::number(_containsNectar) +  "|" + QString::number(_BeeHealth));
+      painter->setPen(Qt::GlobalColor::lightGray);
+
+//      auto text = QString::number(_containsNectar,'f',2)+"|"+QString::number(_BeeHealth,'f',2);
+//      painter->drawText(static_cast<int>(newX-_width*1.5),static_cast<int>(newY),text);
+
+
+
+      //    painter->drawText(newX+_width,newY,QString::number(_containsNectar) +  "|" + QString::number(_BeeHealth));
 //    QString coord =
 //    painter->drawEllipse(static_cast<int>(_x*_scaleX-_width/2),static_cast<int>(_y*_scaleY-_height/2), _width, _height);
 //    QDebug(QtMsgType::QtInfoMsg) << "INFO: Draw bee   :  (" << newX << "x" << newY << ")";
@@ -95,7 +104,7 @@ Bee::Bee(Hive* parent, World* worldPtr, QVector<int> gen)
     _beeLife = _MAX_LIFE_LEVEL / 255 * gen.at(2);
 
     _gen = gen;
-
+    QDebug(QtMsgType::QtInfoMsg) << "INFO: New Bee : {" << _gen[0] <<"," << _gen[1] << "," << _gen[2] << "}";
     _scaleY = worldPtr->_scaleY;
     _scaleX = worldPtr->_scaleX;
     _x = parent->GetX();
@@ -111,6 +120,11 @@ Bee::Bee(Hive* parent, World* worldPtr, QVector<int> gen)
 //    std::uniform_real_distribution<int> speed(0, 0.5);
 
 
+}
+
+Bee::~Bee()
+{
+//    delete _color;
 }
 
 void Bee::SetCoordinates(float x, float y)
@@ -152,7 +166,7 @@ Hive *Bee::GetParent()
 
 void Bee::Move()
 {
-    std::uniform_real_distribution<float> step(-0.2,0.2);// диапазон шага
+    std::uniform_real_distribution<float> step(-0.13,0.13);// диапазон шага
 
 //    QDebug(QtMsgType::QtInfoMsg) << "INFO: Bee Move";
     emit WantToMove(step(_generator),step(_generator), this);

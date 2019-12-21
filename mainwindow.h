@@ -13,7 +13,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr, unsigned width = 0 , unsigned height = 0);
+    MainWindow(QWidget *parent = nullptr, unsigned width = 0 , unsigned height = 0, QApplication* app = nullptr);
     ~MainWindow();
     void GetWorldRef(World* worldPtr);
     void RepaintScene(QGraphicsItem * item);
@@ -24,11 +24,14 @@ private:
     Ui::MainWindow *ui;
     QGraphicsScene *_scene = nullptr;
     World* _refToWorld = nullptr;
-    QThread* _algorithm = nullptr;
+//    QThread* _algorithm = nullptr;
     QGraphicsItem* _rect = nullptr;
+    QApplication* _app;
     unsigned _widgetWidth, _widgetHeigth;
     // QWidget interface
 protected:
     void resizeEvent(QResizeEvent *event);
+private slots:
+    void on_actionStop_triggered();
 };
 #endif // MAINWINDOW_H

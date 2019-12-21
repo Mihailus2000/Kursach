@@ -45,7 +45,8 @@ private:
     World* _ptrToWorld;
     const float _MAX_CAPACITY_OF_NECTAR = 200.f;
     const float _MAX_CHANGE_OF_PARAMETR = 0.5f;
-    const unsigned _MAX_AMOUNT_OF_BEES = 20;
+    const unsigned _MAX_AMOUNT_OF_BEES = 7;
+    const int _TIMER_TO_BIRTH = 7000;
     void GenerateColorOfThis();
 
 public:

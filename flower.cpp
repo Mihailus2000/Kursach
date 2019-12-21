@@ -7,6 +7,9 @@ Flower::Flower(float x, float y, World *worldPtr) : QObject()
 {
     _x = x;
     _y = y;
+    std::mt19937 gen(rand());
+    std::uniform_real_distribution<float> genHealth(_MIN_START_HEALTH,_MAX_START_HEALTH);
+    _lifeLevel = genHealth(gen);
     _health = _lifeLevel;
     _scaleY = worldPtr->_scaleY;
     _scaleX = worldPtr->_scaleX;
@@ -41,18 +44,20 @@ QRectF Flower::boundingRect() const
 void Flower::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     painter->setPen(Qt::red);
-//    if(_lifeLevel >= 50){
-//        if(_bloomed)
-//            painter->setBrush(Qt::yellow);
-//        else
-//            painter->setBrush(Qt::GlobalColor::green);
-//    }
-//    if(_lifeLevel >= 25 && _lifeLevel < 50){
-//        painter->setBrush(Qt::darkGreen);
-//    }
-//    if(_lifeLevel >= 10 && _lifeLevel < 25){
-//        painter->setBrush(Qt::darkGray);
-//    }
+    if(_lifeLevel >= 0.5f*_lifeLevel){
+        if(_posibleToClone)
+            painter->setBrush(Qt::yellow);
+        else
+            painter->setBrush(Qt::GlobalColor::green);
+    }
+    if(_lifeLevel >= 0.25f*_lifeLevel && _lifeLevel < 0.5f*_lifeLevel){
+        painter->setBrush(Qt::darkGreen);
+    }
+    if(_lifeLevel >= 0.15*_lifeLevel && _lifeLevel < 0.25f*_lifeLevel){
+        painter->setBrush(Qt::darkGray);
+    }
+    if(_health < 0.15*_lifeLevel)
+        painter->setBrush(Qt::black);
 
     if(_firstDraw){
 //        std::mt19937 gen(rand());
@@ -63,11 +68,13 @@ void Flower::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
         _firstDraw = false;
     }
 
-    if(_health < 10)
-        painter->setBrush(Qt::black);
 //    painter->drawRect(static_cast<int>(_x*_scaleX/*+_scaleX/2*/),static_cast<int>(_y*_scaleY/*+_scaleY/2*/),static_cast<int>(_scaleX), static_cast<int>(_scaleY));
     painter->drawEllipse( _drawingX, _drawingy, _flowerSize, _flowerSize);
-    painter->drawText(static_cast<int>(_drawingX+/*_scaleX/2*/_flowerSize),static_cast<int>(_drawingy+_flowerSize),QString::number(_containsNectar)+"|"+QString::number(_health));
+
+    painter->setPen(Qt::GlobalColor::lightGray);
+//    auto text = QString::number(_containsNectar,'f',2)+"|"+QString::number(_health,'f',2);
+//    painter->drawText(static_cast<int>(_drawingX/*_scaleX/2*/-33/*/2*/),static_cast<int>(_drawingy+6/*+_flowerSize*/),text);
+
 //    widget->repaint();
     Q_UNUSED(option)
     Q_UNUSED(widget)
@@ -76,15 +83,33 @@ void Flower::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 void Flower::Work()
 {
     if(_health > 0.f){
-        if(_containsNectar == 0.f){ // its means that flower is dusted
-            emit GenerateClone(this);
-            _containsNectar = _maxCapacityOfNectar;
+        if(_posibleToClone){
+            if(_containsNectar == 0.f && _leftToBirth > 0){ // its means that flower is dusted
+                emit GenerateClone(this);
+                _decreasesHealth *= 2.f;
+//                _maxCapacityOfNectar -= 2.f;
+//                _containsNectar = _maxCapacityOfNectar;
+                _leftToBirth --;
+                _stepsFromLastClone = 0;
+                _posibleToClone = false;
+            }
+            if(_leftToBirth <= 0){
+                emit DeleteFlower(this);
+                return;
+            }
+        }
+        else{
+            _stepsFromLastClone ++;
+            if(_stepsFromLastClone >= _STEPS_TO_NEXT_POSIBLE_CLONING){
+                _posibleToClone = true;
+            }
         }
     }
     else{
         emit DeleteFlower(this);
+        return;
     }
-    _health -= 0.05f;
+    _health -= _decreasesHealth;
 }
 
 void Flower::SetCoordinates(float x, float y)
