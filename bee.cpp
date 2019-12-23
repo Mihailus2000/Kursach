@@ -5,6 +5,7 @@
 #include "world.h"
 
 QRectF Bee::boundingRect() const {
+//    const_cast<Bee*>(this)->prepareGeometryChange();
     return QRectF(0,0,_MAX_WIDTH/255*_gen[0]+_MIN_WIDTH, _MAX_HEIGHT/255*_gen[0]+_MIN_HEIGHT);
 }
 
@@ -34,9 +35,8 @@ void Bee::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
 
       painter->setPen(Qt::GlobalColor::lightGray);
 
-//      auto text = QString::number(_containsNectar,'f',2)+"|"+QString::number(_BeeHealth,'f',2);
-//      painter->drawText(static_cast<int>(newX-_width*1.5),static_cast<int>(newY),text);
-
+      auto text = QString::number(_containsNectar,'f',2)+"|"+QString::number(_BeeHealth,'f',2);
+      painter->drawText(static_cast<int>(newX-_width*1.5),static_cast<int>(newY),text);
 
 
       //    painter->drawText(newX+_width,newY,QString::number(_containsNectar) +  "|" + QString::number(_BeeHealth));
@@ -61,7 +61,7 @@ void Bee::Work()
 
     if(_beeState == FLY){
         Move();
-        _BeeHealth -= 0.05f; //TODO WHAT TO do with it??????????????
+        _BeeHealth -= _TAKE_HEALTH_AT_TIME; //TODO WHAT TO do with it??????????????
 
         if(_BeeHealth <= _beeLife * 0.1f){
             if(_BeeHealth <= 0.f) {
@@ -125,6 +125,7 @@ Bee::Bee(Hive* parent, World* worldPtr, QVector<int> gen)
 Bee::~Bee()
 {
 //    delete _color;
+    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Bee";
 }
 
 void Bee::SetCoordinates(float x, float y)

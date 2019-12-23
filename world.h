@@ -8,13 +8,15 @@
 #include <QGraphicsItem>
 #include <random>
 
+#include <QMutex>
+
 
 class World : public QObject
 {
     Q_OBJECT
 
 signals:
-    void RepaintObj(QGraphicsItem* item);
+    void RepaintObj(IObjects* item, QThread* workTh);
 
 public slots:
 //    void DebugFPS();
@@ -30,8 +32,8 @@ public:
 
     unsigned contAmount;
 //    void CloseProgram();
-    World(unsigned widgetWidth, unsigned widgetHeight, unsigned worldWidth, unsigned worldHeight);
-    ~World();
+    World(unsigned widgetWidth, unsigned widgetHeight, unsigned worldWidth, unsigned worldHeight, QMutex* mut = nullptr);
+    virtual ~World();
 
     void AddLife();
     float _scaleX, _scaleY;
@@ -39,16 +41,17 @@ public:
     unsigned _height;
     QString _delimer = "X";
     std::mt19937 _gen;
+    QMutex* _mutex = nullptr;
 //    std::random_device* _device;
     TMap* _map;
-
+    QGraphicsScene* _scenePtr;
 private:
     unsigned _amountOfFlowers = 0;
-
-
-    const unsigned _BEE_AMOUNT = 3;
+    unsigned _inter = 0;
+    unsigned Maxiteration = 9999999;
+    const unsigned _BEE_AMOUNT = 2;
     const unsigned _HIVE_AMOUNT = 3;
-    const unsigned _FLOWERS_AMOUNT = 50  ;
+    const unsigned _FLOWERS_AMOUNT = 30  ;
     const unsigned _MAX_AMOUNT_OF_FLOWERS_IN_COORDINATE = 5;
 
 };

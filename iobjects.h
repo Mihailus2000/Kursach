@@ -9,7 +9,7 @@ class IObjects : public QGraphicsItem
 public:
 //    IObjects(unsigned width, unsigned height) : worldXSize(width), worldYSize(height) {};
     IObjects();
-    ~IObjects();
+    virtual ~IObjects();
     virtual void SetCoordinates(float x, float _y) = 0;
     virtual float GetX() = 0;
     virtual float GetY() = 0;

@@ -1,6 +1,7 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
 
+#include <QMutex>
 #include "iobjects.h"
 #include <QMap>
 #include <QGraphicsItem>
@@ -17,15 +18,15 @@ class Container : public QObject{
     Q_OBJECT
 
 private:
-    QList<IObjects*> _objArr;
    /* AbstractFlower* flowerPtr = nullptr;
     Hive* hivePtr = nullptr;
     BeeSimulator* beePtr = nullptr;*/
     int _count = 0;
     std::mt19937 _gen;
     World* _myWorld;
+    QMutex* _mu;
 signals:
-    void RepaintObj(QGraphicsItem* item);
+    void RepaintObj(IObjects* item, QThread* work);
     void ObjectWantToMove(float dx,float dy, IObjects* objPtr, Container* contPtr);
     void BeeCollect(Bee* bee, Container* thisCont);
     void GenerateClone(IObjects* obj);
@@ -36,18 +37,20 @@ private slots:
     void GenerateNewBee(Bee *bee);
     void DeleteObject(IObjects* obj);
 public:
+    QList<IObjects*> _objArr;
     QString GetCoordinates();
-    Container(unsigned x, unsigned y, World* ptr);
+    Container(unsigned x, unsigned y, World* ptr, QMutex* mu);
     virtual ~Container();
     unsigned GetX();
     unsigned GetY();
-    void RedrawObject();
+    void RedrawObject(QThread* workThread);
     void Recalc();
     unsigned _x;
     unsigned _y;
     QSet<Flower *> GetFlowers();
     bool CheckFromHive();
     QString _coordStr;
+    QGraphicsScene* _scene;
 
 
 /*

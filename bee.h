@@ -17,7 +17,6 @@ class Bee : public QObject/*public QGraphicsItem*/, public IObjects
 
     enum State {
         FLY,
-        COLLECT,
         FLY_BACK,
         AT_HOME,
         DIE
@@ -71,12 +70,12 @@ private:
     QColor * _color = nullptr;
 
     const float _SPEED = 0.5f;
-    const float _MAX_CAPACITY_OF_NECTAR = 70.f; // for ideal bee
+    const float _MAX_CAPACITY_OF_NECTAR = 50.f; // for ideal bee
     const float _TAKE_FOOD_AT_TIME = 3.f;// for ideal bee
-    const float _MAX_LIFE_LEVEL = 60.f;// for ideal bee
+    const float _MAX_LIFE_LEVEL = 40.f;// for ideal bee
     const float _MAX_WIDTH = 23.3;
     const float _MAX_HEIGHT = 10;
-
+    const float _TAKE_HEALTH_AT_TIME = 0.03;
     const float _MIN_WIDTH = 7.;
     const float _MIN_HEIGHT = 3.;
 

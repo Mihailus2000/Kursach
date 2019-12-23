@@ -9,6 +9,7 @@
 void Hive::GenerateNewBee()
 {
     //std::tuple<float,float,float> capacityAndTakeFoodAndLifeLevel;
+    if(_containsHonny )
     float sumCapacityOfNectar = 0.f;
     float sumTakeFoodTime = 0.f;
     float sumMaxLifeLevel = 0.f;
@@ -36,17 +37,19 @@ void Hive::GenerateNewBee()
 //        float averageP1 = sumCapacityOfNectar / amountOfBees;
 //        float averageP2 = sumTakeFoodTime / amountOfBees;
 //        float averageP3 = sumMaxLifeLevel / amountOfBees;
-
-        if(_generationNumber % 3 == 0 && _poolOfBees.size()  <=_MAX_AMOUNT_OF_BEES){
-            std::mt19937 generator(rand());
-            std::uniform_int_distribution<int> mutationGenValue(1,16/*255*/);
-            std::uniform_int_distribution<int> genIndex(0,avgGen.size()-1);
-            auto value = mutationGenValue(generator)*16-1;
-            avgGen[genIndex(generator)] = value;
+        if(_poolOfBees.size()  <= _MAX_AMOUNT_OF_BEES){
+            if(_generationNumber % 3 == 0 ){
+                std::mt19937 generator(rand());
+                std::uniform_int_distribution<int> mutationGenValue(1,16/*255*/);
+                std::uniform_int_distribution<int> genIndex(0,avgGen.size()-1);
+                auto value = mutationGenValue(generator)*16-1;
+                avgGen[genIndex(generator)] = value;
+            }
+            Bee* newBee = new Bee(this, _ptrToWorld, avgGen);
+            _poolOfBees.insert(newBee);
+            emit WantGenerateNewBee(newBee);
+            _generationNumber++;
         }
-        Bee* newBee = new Bee(this, _ptrToWorld, avgGen);
-        emit WantGenerateNewBee(newBee);
-        _generationNumber++;
     }
 }
 
@@ -61,6 +64,7 @@ Hive::Hive(float x, float y, World* worldPtr) : _x(x+0.5f), _y(y+0.5f) {
 }
 
 Hive::~Hive() {
+    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Hive";
     delete _color;
     qDeleteAll(_poolOfBees);
     delete timer;
@@ -136,7 +140,10 @@ void Hive::AddBeeToMemory(Bee *bee){ _poolOfBees.insert(bee); }
 
 void Hive::RemoveBeeFromMemory(Bee *bee){ _poolOfBees.remove(bee); }
 
-QRectF Hive::boundingRect() const { return QRectF(0,0,_size,_size); }
+QRectF Hive::boundingRect() const {
+//    const_cast<Hive*>(this)->prepareGeometryChange();
+    return QRectF(0,0,_size,_size);
+}
 
 void Hive::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -146,8 +153,8 @@ void Hive::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
                       static_cast<int>(_size),static_cast<int>(_size));
 
     painter->setPen(Qt::GlobalColor::darkGray);
-//    auto text = QString::number(_containsNectar,'f',2) + " | " + QString::number(_containsHonny,'f',2);
-//    painter->drawText((_x*_scaleX)-29,_y*_scaleY+35,/*QString::number(_x)+"x"+QString::number(_y)*/text);
+    auto text = QString::number(_containsNectar,'f',2) + " | " + QString::number(_containsHonny,'f',2) + " | " + QString::number(_poolOfBees.size());
+    painter->drawText((_x*_scaleX)-29,_y*_scaleY+35,/*QString::number(_x)+"x"+QString::number(_y)*/text);
 
     Q_UNUSED(option)
     Q_UNUSED(widget)
@@ -167,6 +174,11 @@ void Hive::Work()
         float probability = generatePobabilityOfCreating(generator);
         if(probability <= probabilityOfSuccess){
             float addedHonny = efficiency * checkingAmount;
+            if(_containsHonny + addedHonny > _CAPACITY_OF_HONNY){
+                _containsHonny = _CAPACITY_OF_HONNY;
+            }
+            else
+                _containsHonny += addedHonny;
             _containsNectar -= checkingAmount;
         }
     }

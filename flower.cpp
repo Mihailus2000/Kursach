@@ -8,11 +8,16 @@ Flower::Flower(float x, float y, World *worldPtr) : QObject()
     _x = x;
     _y = y;
     std::mt19937 gen(rand());
-    std::uniform_real_distribution<float> genHealth(_MIN_START_HEALTH,_MAX_START_HEALTH);
+    std::uniform_real_distribution<float> genHealth(_MAX_START_HEALTH/2,_MAX_START_HEALTH);
     _lifeLevel = genHealth(gen);
     _health = _lifeLevel;
     _scaleY = worldPtr->_scaleY;
     _scaleX = worldPtr->_scaleX;
+}
+
+Flower::~Flower()
+{
+    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Flower";
 }
 
 float Flower::GiveNectar()
@@ -38,6 +43,7 @@ float Flower::GiveNectar()
 
 QRectF Flower::boundingRect() const
 {
+//    const_cast<Flower*>(this)->prepareGeometryChange();
     return QRectF(0,0,_flowerSize,_flowerSize);
 }
 
@@ -72,8 +78,8 @@ void Flower::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
     painter->drawEllipse( _drawingX, _drawingy, _flowerSize, _flowerSize);
 
     painter->setPen(Qt::GlobalColor::lightGray);
-//    auto text = QString::number(_containsNectar,'f',2)+"|"+QString::number(_health,'f',2);
-//    painter->drawText(static_cast<int>(_drawingX/*_scaleX/2*/-33/*/2*/),static_cast<int>(_drawingy+6/*+_flowerSize*/),text);
+    auto text = QString::number(_containsNectar,'f',2)+"|"+QString::number(_health,'f',2);
+    painter->drawText(static_cast<int>(_drawingX/*_scaleX/2*/-33/*/2*/),static_cast<int>(_drawingy+6/*+_flowerSize*/),text);
 
 //    widget->repaint();
     Q_UNUSED(option)
@@ -84,14 +90,19 @@ void Flower::Work()
 {
     if(_health > 0.f){
         if(_posibleToClone){
-            if(_containsNectar == 0.f && _leftToBirth > 0){ // its means that flower is dusted
+            if(_containsNectar== 0.f && _leftToBirth > 0){ // its means that flower is dusted
                 emit GenerateClone(this);
                 _decreasesHealth *= 2.f;
 //                _maxCapacityOfNectar -= 2.f;
-//                _containsNectar = _maxCapacityOfNectar;
+                _containsNectar = _maxCapacityOfNectar / 1.26;
                 _leftToBirth --;
+                if(_leftToBirth <= 0){
+                    emit DeleteFlower(this);
+                    return;
+                }
                 _stepsFromLastClone = 0;
                 _posibleToClone = false;
+
             }
             if(_leftToBirth <= 0){
                 emit DeleteFlower(this);
@@ -110,6 +121,10 @@ void Flower::Work()
         return;
     }
     _health -= _decreasesHealth;
+//                if(_health <= 0){
+//                    emit DeleteFlower(this);
+//                    return;
+//                }
 }
 
 void Flower::SetCoordinates(float x, float y)

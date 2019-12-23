@@ -1,3 +1,4 @@
+#include <QGraphicsScene>
 #include "container.h"
 #include <QTime>
 //#include "bee.h"
@@ -25,6 +26,7 @@ void Container::DeleteObject(IObjects *obj)
 {
     auto deletingBee = dynamic_cast<Bee*>(obj);
     auto deletingFlower = dynamic_cast<Flower*>(obj);
+    _mu->lock();
     if(deletingBee){
         Hive* beeHive = deletingBee->GetParent();
         beeHive->RemoveBeeFromMemory(deletingBee);
@@ -34,8 +36,14 @@ void Container::DeleteObject(IObjects *obj)
     }
     _objArr.removeOne(obj);
     _count--;
+    QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(DELETE)-----";
+
+//    if(obj->scene() == _scene)
+//        _scene->removeItem(obj);
     delete obj;
-    obj = nullptr;
+    obj = NULL;
+    QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(DELETE)-----";
+    _mu->unlock();
 
     if(_count == 0) {
         if(_objArr.size() == 0){
@@ -77,14 +85,16 @@ QString Container::GetCoordinates()
 //    }
 //}
 
-Container::Container(unsigned x, unsigned y, World* ptr) : _x(x), _y(y), _myWorld(ptr) {
+Container::Container(unsigned x, unsigned y, World* ptr, QMutex* mu) : _x(x), _y(y), _myWorld(ptr), _mu(mu) {
      _coordStr = "coordX"+QString::number(x) +"coordY"+QString::number(y);
      _gen.seed(rand());
 }
 
 Container::~Container()
 {
-    qDeleteAll(_objArr);
+//    qDeleteAll(_objArr);
+    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Container {";
+    QDebug(QtMsgType::QtInfoMsg) << "INFO: CONTAIN :" << _objArr.size() << " elements\n}";
 
 }
 
@@ -142,7 +152,13 @@ void Container::AddObject(IObjects *obj)
 
 bool Container::RemoveObject(IObjects *obj)
 {
-    _objArr.removeAll(obj);
+    _mu->lock();
+   int cnt = _objArr.removeAll(obj);
+   _mu->unlock();
+   if(cnt > 1){
+       QDebug(QtMsgType::QtFatalMsg) << "Maybe deleted more then 1 element!";
+   }
+   QDebug(QtMsgType::QtInfoMsg) << "INFO: Remove " << cnt << " elements!";
 //    connect(obj, &Bee::WantToMove, this, &Container::WantToMove);
     auto deletingFlower = dynamic_cast<Flower*>(obj);
     auto deletingHive = dynamic_cast<Hive*>(obj);
@@ -153,15 +169,19 @@ bool Container::RemoveObject(IObjects *obj)
 //        // TODO : Add here all disconnects!
 //    }
     if(deletingHive){
-        QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete hive! : " << obj->GetX() << "," << obj->GetY();
+        QDebug(QtMsgType::QtInfoMsg) << "INFO: REmove hive! : " << obj->GetX() << "," << obj->GetY();
         // TODO : Add here all disconnects!
     }
     if(deletingBee){
-          QDebug(QtMsgType::QtInfoMsg) << "INFO: Delete bee! : " << obj->GetX() << "," << obj->GetY();
+          QDebug(QtMsgType::QtInfoMsg) << "INFO: Remove bee! : " << obj->GetX() << "," << obj->GetY();
         disconnect(deletingBee, &Bee::WantToMove, this, &Container::WantToMove);
         disconnect(deletingBee, &Bee::ToCollect, this, &Container::BeeWanToCollect);
         disconnect(deletingBee, &Bee::DeleteBee, this, &Container::DeleteObject);
 
+    }
+    if(deletingFlower){
+        QDebug(QtMsgType::QtCriticalMsg) << "INFO: REmove flower! : " << obj->GetX() << "," << obj->GetY();
+        // TODO : Add here all disconnects!
     }
 //    if(deletingFlower){
 //        disconnect(deletingFlower, &Flower::GenerateClone, this, &Container::GenerateClone);
@@ -180,7 +200,7 @@ bool Container::RemoveObject(IObjects *obj)
             return true;
         }
         else{
-//            QDebug(QtMsgType::QtFatalMsg) << "INFO: left objects :" << _count << " instead of 0!!\n\n";
+            QDebug(QtMsgType::QtFatalMsg) << "INFO: left objects :" << _count << " instead of 0!!\n\n";
             return false;
         }
 //        this->deleteLater();
@@ -216,44 +236,53 @@ Hive *Container::AddHive()
 
 
 
-void Container::RedrawObject()
+void Container::RedrawObject(QThread *workThread)
 {
     auto i = _objArr.begin();
     QTime currT;
     int cnt = 0;
-    QDebug(QtMsgType::QtInfoMsg) << "------ startDrawContainer";
+//    QDebug(QtMsgType::QtInfoMsg) << "------ startDrawContainer";
     while(i!=_objArr.end()){
 //        for(auto obj : _objArr){
         if(dynamic_cast<QGraphicsItem*>(*i) != nullptr){
             if(dynamic_cast<Bee*>(*i)){
-                QDebug(QtMsgType::QtInfoMsg) << "INFO: Bee DRAW!";
+//                QDebug(QtMsgType::QtInfoMsg) << "INFO: Bee DRAW!";
             }
             else{
                 if(dynamic_cast<Flower*>(*i)){
-                    QDebug(QtMsgType::QtInfoMsg) << "INFO: Flower DRAW!";
+//                    QDebug(QtMsgType::QtInfoMsg) << "INFO: Flower DRAW!";
                 }
                 else{
                     if(dynamic_cast<Hive*>(*i)){
-                        QDebug(QtMsgType::QtInfoMsg) << "INFO: Hive DRAW!";
+//                        QDebug(QtMsgType::QtInfoMsg) << "INFO: Hive DRAW!";
                     }
                     else{
-                        QDebug(QtMsgType::QtInfoMsg) << "INFO: UNKNOWN DRAW! Type : " << typeid(*i).name();
+                        QDebug(QtMsgType::QtFatalMsg) << "INFO: UNKNOWN DRAW! Type : " << typeid(*i).name();
                     }
                 }
             }
-            currT.start();
-            emit RepaintObj(dynamic_cast<QGraphicsItem*>(*i));
-            QDebug(QtMsgType::QtInfoMsg) << "   INFO: DRAW FPS = " << currT.elapsed() << "\n----";
+//            currT.start();
+            auto bee = dynamic_cast<Bee*>(*i);
+            auto flower = dynamic_cast<Flower*>(*i);
+            auto hive = dynamic_cast<Hive*>(*i);
+            if(bee!=nullptr || hive!=nullptr || flower != nullptr){
+                emit RepaintObj(*i,workThread);
+            }
+            else{
+                QDebug(QtMsgType::QtFatalMsg) << "-----FALFALFAOFHIAD-----";
+            }
+//            QApplication::processEvents();
+//            QDebug(QtMsgType::QtInfoMsg) << "   INFO: DRAW FPS = " << currT.elapsed() << "\n----";
 //            i++;
 
         }
         else{
-            QDebug(QtMsgType::QtInfoMsg) << "INFO: ???Succesfull redraw elements : " << cnt << "\n-----";
-            QDebug(QtMsgType::QtFatalMsg) << "FATAL: Phantom object!";
+//            QDebug(QtMsgType::QtInfoMsg) << "INFO: ???Succesfull redraw elements : " << cnt << "\n-----";
+//            QDebug(QtMsgT/ype::QtFatalMsg) << "FATAL: Phantom object!";
         }
         ++i;
         cnt++;
-        QDebug(QtMsgType::QtInfoMsg) << "INFO: Succesfull redraw elements : " << cnt << "\n-----";
+//        QDebug(QtMsgType::QtInfoMsg) << "INFO: Succesfull redraw elements : " << cnt << "\n-----";
     }
 
 }
@@ -262,7 +291,10 @@ void Container::Recalc()
 {
 //    auto i = _objArr.begin();
 //    while(i != _objArr.end()){
-    for(int i = 0; i < _objArr.size(); i++){
+//    _mu->lock();
+//    QDebug(QtMsgType::QtDebugMsg) << "-----LOCKKKKKKKK-----";
+    for(int i = 0; i < _objArr.size();){
+
 //    for(auto obj = _objArr.begin(); obj != _objArr.end(); ++obj){
 //        if(dynamic_cast<Bee*>(object) != nullptr){
 //            auto bee = dynamic_cast<Bee*>(object);
@@ -279,7 +311,14 @@ void Container::Recalc()
 //            flower->Work();
 //            continue;
 //        }
+//        qDebug() << "Work...";
         _objArr.at(i)->Work();
+//        QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCKKKKKKKKK-----";
+//        _mu->unlock();
+//        qDebug() << "...Work end";
+
+        i++;
+
     }
 }
 
