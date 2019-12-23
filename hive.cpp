@@ -64,7 +64,7 @@ Hive::Hive(float x, float y, World* worldPtr) : _x(x+0.5f), _y(y+0.5f) {
 }
 
 Hive::~Hive() {
-    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Hive";
+//    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Hive";
     delete _color;
     qDeleteAll(_poolOfBees);
     delete timer;

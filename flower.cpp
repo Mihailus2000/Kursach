@@ -17,7 +17,7 @@ Flower::Flower(float x, float y, World *worldPtr) : QObject()
 
 Flower::~Flower()
 {
-    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Flower";
+//    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Flower";
 }
 
 float Flower::GiveNectar()

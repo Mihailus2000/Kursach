@@ -41,7 +41,7 @@ void World::Run()
     if(_map->size() == 0){
         AddLife();
     }
-    QDebug(QtMsgType::QtInfoMsg) << "\n--------------------------------------\n";
+//    QDebug(QtMsgType::QtInfoMsg) << "\n--------------------------------------\n";
 
 //    QTime time, time1, fps, currT;
 
@@ -171,19 +171,19 @@ void World::Redraw()
 {
 //    _scenePtr->clear();
     auto i = _map->begin();
-    QDebug(QtMsgType::QtInfoMsg) << "------------------------ SSSSSstartDrawContainerSSSSS";
+//    QDebug(QtMsgType::QtInfoMsg) << "------------------------ SSSSSstartDrawContainerSSSSS";
 
     while(i != _map->end()){
 //    for(auto obj : *_map){
       _mutex->lock();
-      QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(REDRAW)-----";
+//      QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(REDRAW)-----";
             (*i)->RedrawObject(this->thread()->currentThread());
             i++;
-        QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(REDRAW)-----";
+//        QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(REDRAW)-----";
       _mutex->unlock();
 //        QApplication::processEvents();
     }
-    QDebug(QtMsgType::QtInfoMsg) << "------------------------ EEEEEendDrawContainerSSSSS";
+//    QDebug(QtMsgType::QtInfoMsg) << "------------------------ EEEEEendDrawContainerSSSSS";
 }
 
 void World::Recalc()
@@ -258,15 +258,15 @@ void World::Recalc()
             _map->erase(delitIt);
             delit = contToRemove.erase(delit);
             _mutex->lock();
-            QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(RECALC)-----";
+//            QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(RECALC)-----";
             delete *delitIt;
             *delitIt = NULL;
-            QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(RECALC)-----";
+//            QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(RECALC)-----";
             _mutex->unlock();
 
         }
     }
-    QDebug(QtMsgType::QtDebugMsg) << "Maybe deleted " << cnt << " containers!";
+//    QDebug(QtMsgType::QtDebugMsg) << "Maybe deleted " << cnt << " containers!";
     contToRemove.clear();
 
 }
@@ -398,12 +398,12 @@ void World::DeleteContainer(Container *cont)
         Container* cont = *_map->find(coord);
         int cnt = _map->remove(coord);
         if(cnt > 1 || cnt == 0){
-            QDebug(QtMsgType::QtFatalMsg) << "FATAL: Remove NOT ONE container!";
+//            QDebug(QtMsgType::QtFatalMsg) << "FATAL: Remove NOT ONE container!";
         }
 
         delete cont;
         cont = NULL;
-        QDebug(QtMsgType::QtWarningMsg) << "WRN: Delete container!";
+//        QDebug(QtMsgType::QtWarningMsg) << "WRN: Delete container!";
     }
 //    QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(DELETE_CONTAINER)-----";
 //    _mutex->unlock();

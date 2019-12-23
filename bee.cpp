@@ -104,7 +104,7 @@ Bee::Bee(Hive* parent, World* worldPtr, QVector<int> gen)
     _beeLife = _MAX_LIFE_LEVEL / 255 * gen.at(2);
 
     _gen = gen;
-    QDebug(QtMsgType::QtInfoMsg) << "INFO: New Bee : {" << _gen[0] <<"," << _gen[1] << "," << _gen[2] << "}";
+//    QDebug(QtMsgType::QtInfoMsg) << "INFO: New Bee : {" << _gen[0] <<"," << _gen[1] << "," << _gen[2] << "}";
     _scaleY = worldPtr->_scaleY;
     _scaleX = worldPtr->_scaleX;
     _x = parent->GetX();
@@ -125,7 +125,7 @@ Bee::Bee(Hive* parent, World* worldPtr, QVector<int> gen)
 Bee::~Bee()
 {
 //    delete _color;
-    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Bee";
+//    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Bee";
 }
 
 void Bee::SetCoordinates(float x, float y)

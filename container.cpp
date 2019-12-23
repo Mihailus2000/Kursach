@@ -32,17 +32,17 @@ void Container::DeleteObject(IObjects *obj)
         beeHive->RemoveBeeFromMemory(deletingBee);
     }
     if(deletingFlower){
-        QDebug(QtMsgType::QtWarningMsg) << "INFO: Deleting flower!";
+//        QDebug(QtMsgType::QtWarningMsg) << "INFO: Deleting flower!";
     }
     _objArr.removeOne(obj);
     _count--;
-    QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(DELETE)-----";
+//    QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(DELETE)-----";
 
 //    if(obj->scene() == _scene)
 //        _scene->removeItem(obj);
     delete obj;
     obj = NULL;
-    QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(DELETE)-----";
+//    QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(DELETE)-----";
     _mu->unlock();
 
     if(_count == 0) {
@@ -52,7 +52,7 @@ void Container::DeleteObject(IObjects *obj)
             DeleteContainer(this);
         }
         else{
-            QDebug(QtMsgType::QtFatalMsg) << "INFO: left objects :" << _count << " instead of 0!!\n\n";
+//            QDebug(QtMsgType::QtFatalMsg) << "INFO: left objects :" << _count << " instead of 0!!\n\n";
 //            return false;
         }
 //        this->deleteLater();
@@ -93,8 +93,8 @@ Container::Container(unsigned x, unsigned y, World* ptr, QMutex* mu) : _x(x), _y
 Container::~Container()
 {
 //    qDeleteAll(_objArr);
-    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Container {";
-    QDebug(QtMsgType::QtInfoMsg) << "INFO: CONTAIN :" << _objArr.size() << " elements\n}";
+//    QDebug(QtMsgType::QtInfoMsg) << "INFO: Destructor of Container {";
+//    QDebug(QtMsgType::QtInfoMsg) << "INFO: CONTAIN :" << _objArr.size() << " elements\n}";
 
 }
 
@@ -156,9 +156,9 @@ bool Container::RemoveObject(IObjects *obj)
    int cnt = _objArr.removeAll(obj);
    _mu->unlock();
    if(cnt > 1){
-       QDebug(QtMsgType::QtFatalMsg) << "Maybe deleted more then 1 element!";
+//       QDebug(QtMsgType::QtFatalMsg) << "Maybe deleted more then 1 element!";
    }
-   QDebug(QtMsgType::QtInfoMsg) << "INFO: Remove " << cnt << " elements!";
+//   QDebug(QtMsgType::QtInfoMsg) << "INFO: Remove " << cnt << " elements!";
 //    connect(obj, &Bee::WantToMove, this, &Container::WantToMove);
     auto deletingFlower = dynamic_cast<Flower*>(obj);
     auto deletingHive = dynamic_cast<Hive*>(obj);
@@ -169,18 +169,18 @@ bool Container::RemoveObject(IObjects *obj)
 //        // TODO : Add here all disconnects!
 //    }
     if(deletingHive){
-        QDebug(QtMsgType::QtInfoMsg) << "INFO: REmove hive! : " << obj->GetX() << "," << obj->GetY();
+//        QDebug(QtMsgType::QtInfoMsg) << "INFO: REmove hive! : " << obj->GetX() << "," << obj->GetY();
         // TODO : Add here all disconnects!
     }
     if(deletingBee){
-          QDebug(QtMsgType::QtInfoMsg) << "INFO: Remove bee! : " << obj->GetX() << "," << obj->GetY();
+//          QDebug(QtMsgType::QtInfoMsg) << "INFO: Remove bee! : " << obj->GetX() << "," << obj->GetY();
         disconnect(deletingBee, &Bee::WantToMove, this, &Container::WantToMove);
         disconnect(deletingBee, &Bee::ToCollect, this, &Container::BeeWanToCollect);
         disconnect(deletingBee, &Bee::DeleteBee, this, &Container::DeleteObject);
 
     }
     if(deletingFlower){
-        QDebug(QtMsgType::QtCriticalMsg) << "INFO: REmove flower! : " << obj->GetX() << "," << obj->GetY();
+//        QDebug(QtMsgType::QtCriticalMsg) << "INFO: REmove flower! : " << obj->GetX() << "," << obj->GetY();
         // TODO : Add here all disconnects!
     }
 //    if(deletingFlower){
@@ -200,7 +200,7 @@ bool Container::RemoveObject(IObjects *obj)
             return true;
         }
         else{
-            QDebug(QtMsgType::QtFatalMsg) << "INFO: left objects :" << _count << " instead of 0!!\n\n";
+//            QDebug(QtMsgType::QtFatalMsg) << "INFO: left objects :" << _count << " instead of 0!!\n\n";
             return false;
         }
 //        this->deleteLater();
@@ -257,7 +257,7 @@ void Container::RedrawObject(QThread *workThread)
 //                        QDebug(QtMsgType::QtInfoMsg) << "INFO: Hive DRAW!";
                     }
                     else{
-                        QDebug(QtMsgType::QtFatalMsg) << "INFO: UNKNOWN DRAW! Type : " << typeid(*i).name();
+//                        QDebug(QtMsgType::QtFatalMsg) << "INFO: UNKNOWN DRAW! Type : " << typeid(*i).name();
                     }
                 }
             }
@@ -269,7 +269,7 @@ void Container::RedrawObject(QThread *workThread)
                 emit RepaintObj(*i,workThread);
             }
             else{
-                QDebug(QtMsgType::QtFatalMsg) << "-----FALFALFAOFHIAD-----";
+//                QDebug(QtMsgType::QtFatalMsg) << "-----FALFALFAOFHIAD-----";
             }
 //            QApplication::processEvents();
 //            QDebug(QtMsgType::QtInfoMsg) << "   INFO: DRAW FPS = " << currT.elapsed() << "\n----";

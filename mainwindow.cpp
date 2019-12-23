@@ -68,7 +68,7 @@ void MainWindow::RepaintScene(IObjects *item, QThread* threadToSleep)
 //                        QDebug(QtMsgType::QtInfoMsg) << "INFO: Hive DRAW!";
             }
             else{
-                QDebug(QtMsgType::QtFatalMsg) << "INFO: UNKNOWN DRAW! Type : " << typeid(item).name();
+//                QDebug(QtMsgType::QtFatalMsg) << "INFO: UNKNOWN DRAW! Type : " << typeid(item).name();
             }
         }
     }
@@ -76,7 +76,7 @@ void MainWindow::RepaintScene(IObjects *item, QThread* threadToSleep)
 
     if(dynamic_cast<QGraphicsItem*>(item)) {
         if(thread()->currentThread()->currentThreadId() != threadToSleep->currentThreadId())
-            QDebug(QtMsgType::QtCriticalMsg) << "QTFTFTTFT";
+//            QDebug(QtMsgType::QtCriticalMsg) << "QTFTFTTFT";
 //        if(item->scene() == _scene) {
 ////            _workThread->blockSignals(true);
 //            item->scene()->removeItem(item);
@@ -93,7 +93,7 @@ void MainWindow::RepaintScene(IObjects *item, QThread* threadToSleep)
 //            item->scene()->removeItem(item);
 
             _mutex->lock();
-            QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(DRAW2)-----";
+//            QDebug(QtMsgType::QtDebugMsg) << "-----LOCK(DRAW2)-----";
 
             auto bee = dynamic_cast<Bee*>(item);
             auto hive = dynamic_cast<Hive*>(item);
@@ -106,9 +106,9 @@ void MainWindow::RepaintScene(IObjects *item, QThread* threadToSleep)
                 _scene->addItem(item);
             }
             else
-                QDebug(QtMsgType::QtWarningMsg) << "-----DRAW_FAIL-----";
+//                QDebug(QtMsgType::QtWarningMsg) << "-----DRAW_FAIL-----";
             _mutex->unlock();
-            QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(DRAW2)-----";
+//            QDebug(QtMsgType::QtDebugMsg) << "-----UNLOCK(DRAW2)-----";
 
 //            threadToSleep->blockSignals(false);
 //        }
@@ -140,15 +140,15 @@ void MainWindow::StartAlgorithm()
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
-    QDebug(QtMsgType::QtInfoMsg) << "RESIZE";/*
-    QDebug(QtMsgType::QtInfoMsg) << "---\nvuew: " << ui->graphicsView->rect();
-    QDebug(QtMsgType::QtInfoMsg) << "widgeeet: " << ui->centralwidget->rect();
-    QDebug(QtMsgType::QtInfoMsg) << "seceneee: " << _scene->sceneRect();*/
+//    QDebug(QtMsgType::QtInfoMsg) << "RESIZE";/*
+//    QDebug(QtMsgType::QtInfoMsg) << "---\nvuew: " << ui->graphicsView->rect();
+//    QDebug(QtMsgType::QtInfoMsg) << "widgeeet: " << ui->centralwidget->rect();
+//    QDebug(QtMsgType::QtInfoMsg) << "seceneee: " << _scene->sceneRect();*/
     _scene->setSceneRect(0,0,_widgetWidth, _widgetHeigth);
     if(_rect == nullptr){
         _rect = new QGraphicsRectItem(_scene->sceneRect());
     }
-    QDebug(QtMsgType::QtInfoMsg) << "\n---";
+//    QDebug(QtMsgType::QtInfoMsg) << "\n---";
 //    _scene->update();
 //    QApplication::processEvents(/*QEventLoop::ProcessEventsFlag::WaitForMoreEvents*/);
 }

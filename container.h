@@ -62,7 +62,7 @@ public:
         if(flowerPtr)
             return flowerPtr;
         else{
-            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
+//            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
             //TODO Exception
         }
     }
@@ -70,7 +70,7 @@ public:
         if(hivePtr)
             return hivePtr;
         else{
-            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning hive is null!";
+//            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning hive is null!";
             //TODO Exception
         }
     }
@@ -78,7 +78,7 @@ public:
         if(beePtr)
             return beePtr;
         else{
-            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning bee is null!";
+//            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning bee is null!";
             //TODO Exception
         }
     }*/
@@ -103,7 +103,7 @@ public:
             return tmpPtr;
         }
         else{
-            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
+//            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
             //TODO Exception
         }
     }
@@ -117,7 +117,7 @@ public:
             return tmpPtr;
         }
         else{
-            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
+//            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
             //TODO Exception
         }
     }
@@ -130,7 +130,7 @@ public:
             return tmpPtr;
         }
         else{
-            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
+//            QDebug(QtMsgType::QtWarningMsg) << "WRN: Returning flower is null!";
             //TODO Exception
         }
     }
